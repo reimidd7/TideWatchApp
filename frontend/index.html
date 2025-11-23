@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TideWatch - Maple Grove Beach</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Main Container -->
+    <div id="app" class="container">
+        
+        <!-- Left Side Panel -->
+        <aside class="side-panel">
+            <h2 class="location-title" id="location-name">Maple Grove Beach</h2>
+            
+            <div class="current-height">
+                <div class="label">Current Height</div>
+                <div class="value" id="current-height">7.8 ft</div>
+            </div>
+            
+            <div class="tide-times">
+                <div class="tide-time">
+                    <div class="label">Next Low</div>
+                    <div class="value" id="next-low">7:34 PM</div>
+                </div>
+                <div class="tide-time">
+                    <div class="label">Next High</div>
+                    <div class="value" id="next-high">9:08 AM</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Top Grid - Info Cards -->
+            <div class="info-grid">
+                
+                <!-- Tide Dial Card -->
+                <div class="info-card tide-dial-card">
+                    <div class="tide-dial-container">
+                        <svg class="tide-dial" viewBox="0 0 200 200">
+                            <!-- Outer circle -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#3a4555" stroke-width="2"/>
+                            
+                            <!-- Tide level arc (will be animated) -->
+                            <path id="tide-arc" d="" fill="none" stroke="#ff4444" stroke-width="8" stroke-linecap="round"/>
+                            
+                            <!-- Center circle -->
+                            <circle cx="100" cy="100" r="60" fill="#1a2332" stroke="#3a4555" stroke-width="1"/>
+                            
+                            <!-- High tide marker -->
+                            <text x="100" y="30" text-anchor="middle" fill="#a0b5c0" font-size="10">High</text>
+                            <text x="100" y="42" text-anchor="middle" fill="#00a8e8" font-size="12" font-weight="bold" id="high-time">9:08 AM</text>
+                            
+                            <!-- Low tide marker -->
+                            <text x="100" y="175" text-anchor="middle" fill="#a0b5c0" font-size="10">Low</text>
+                            <text x="100" y="187" text-anchor="middle" fill="#00a8e8" font-size="12" font-weight="bold" id="low-time">7:34 PM</text>
+                            
+                            <!-- Rising/Falling indicator -->
+                            <text x="100" y="100" text-anchor="middle" fill="#e8f1f5" font-size="14" font-weight="bold" id="tide-direction">Rising</text>
+                            <text x="100" y="115" text-anchor="middle" fill="#a0b5c0" font-size="10" id="tide-status">↑</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Wind Card -->
+                <div class="info-card">
+                    <h3>Wind Speed and Direction</h3>
+                    <div class="wind-display">
+                        <div class="wind-arrow" id="wind-arrow">↗</div>
+                        <div class="wind-speed" id="wind-speed">54 mph</div>
+                    </div>
+                </div>
+
+                <!-- Weather Card -->
+                <div class="info-card">
+                    <h3>Weather</h3>
+                    <div class="weather-display">
+                        <div class="weather-icon" id="weather-icon">☁️</div>
+                        <div class="weather-temp" id="weather-temp">28°F</div>
+                    </div>
+                </div>
+
+                <!-- Visibility Card -->
+                <div class="info-card">
+                    <h3>Visibility</h3>
+                    <div class="visibility-display">
+                        <div class="visibility-icon">👁️</div>
+                        <div class="visibility-value" id="visibility">10 mi</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Astronomy Section -->
+            <div class="astronomy-section">
+                
+                <!-- Moon -->
+                <div class="astro-card">
+                    <div class="moon-phase" id="moon-phase">🌙</div>
+                    <div class="astro-times">
+                        <div class="astro-time">
+                            <span class="label">Moon Rise:</span>
+                            <span class="value" id="moon-rise">--:--</span>
+                        </div>
+                        <div class="astro-time">
+                            <span class="label">Moon Set:</span>
+                            <span class="value" id="moon-set">--:--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sun -->
+                <div class="astro-card">
+                    <div class="sun-icon">☀️</div>
+                    <div class="astro-times">
+                        <div class="astro-time">
+                            <span class="label">Sunrise:</span>
+                            <span class="value" id="sunrise">--:--</span>
+                        </div>
+                        <div class="astro-time">
+                            <span class="label">Sunset:</span>
+                            <span class="value" id="sunset">--:--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Swipeable Tide Chart Section -->
+            <div class="tide-chart-section">
+                <div class="swipe-container" id="swipe-container">
+                    
+                    <!-- View 1: Today's Chart -->
+                    <div class="swipe-panel active" id="chart-view">
+                        <h3>Today's Tide Chart</h3>
+                        <div class="chart-container">
+                            <canvas id="tide-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- View 2: 7-Day Table -->
+                    <div class="swipe-panel" id="table-view">
+                        <h3>7-Day Tide Table</h3>
+                        <div class="tide-table" id="tide-table">
+                            <!-- Table will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Swipe Indicators -->
+                <div class="swipe-indicators">
+                    <span class="indicator active" data-index="0"></span>
+                    <span class="indicator" data-index="1"></span>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Status Bar -->
+        <footer class="status-bar">
+            <span id="connection-status">🟢 Connected</span>
+            <span id="current-time">Loading...</span>
+            <span id="last-update">Updated: Never</span>
+        </footer>
+
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>

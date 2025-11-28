@@ -12,19 +12,17 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-change-in-production'
     DEBUG = True
     
-    # API Keys (to be added later)
-    # NOAA_API_KEY = os.environ.get('NOAA_API_KEY')
-    # WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY')
-    
     # Data Refresh Intervals (in seconds)
-    TIDE_REFRESH_INTERVAL = 3600  # 1 hour
+    TIDE_REFRESH_INTERVAL = 360  # 6 minutes (NOAA updates every 6 min)
     WEATHER_REFRESH_INTERVAL = 600  # 10 minutes
     ASTRONOMY_REFRESH_INTERVAL = 3600  # 1 hour
     
     # Display Settings
     TIMEZONE = 'America/Los_Angeles'  # Pacific Time
     
-    # NOAA Station ID (nearest to Maple Grove Beach)
-    # Port Townsend station: 9444900
-    # We'll use this when we integrate the NOAA API
-    NOAA_STATION_ID = '9444900'
+    # NOAA Stations
+    # Using Seattle (9447130) for both predictions and observations
+    # Note: Madronna Beach (9448233) doesn't support API predictions (subordinate station)
+    # Seattle's tides are very close to Camano Island (only ~15-20 min time difference)
+    NOAA_PREDICTION_STATION = '9447130'  # Seattle
+    NOAA_OBSERVATION_STATION = '9447130'  # Seattle

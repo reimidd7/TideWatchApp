@@ -37,15 +37,20 @@ async function initApp() {
     // Load weather data
     await loadWeatherData();
     
-    // Load placeholder data
-    loadPlaceholderData();
+    // Load astronomy data
+    await loadAstronomyData();
     
-    // Draw initial tide dial
-    updateTideDial(0.65, true); // 65% of tide cycle, rising
+    // Load tide data
+    await loadTideData();
+    
+    // Refresh tide data every 6 minutes
+    setInterval(loadTideData, 360000);
+    
+    // Refresh astronomy data every hour
+    setInterval(loadAstronomyData, 3600000);
     
     console.log('✅ TideWatch ready!');
 }
-
 // Update clock display
 function updateClock() {
     const now = new Date();
@@ -105,33 +110,99 @@ function updateConnectionStatus(isConnected) {
     }
 }
 
-// Load placeholder data for testing
-function loadPlaceholderData() {
-    // Placeholder tide data
-    document.getElementById('current-height').textContent = '7.8 ft';
-    document.getElementById('next-low').textContent = '7:34 PM';
-    document.getElementById('next-high').textContent = '9:08 AM';
-    document.getElementById('high-time').textContent = '9:08 AM';
-    document.getElementById('low-time').textContent = '7:34 PM';
+// Load tide data from API
+async function loadTideData() {
+    try {
+        const response = await fetch(`${API_BASE}/api/tide`);
+        const result = await response.json();
+        
+        if (result.status === 'ok') {
+            state.tideData = result.data;
+            console.log('🌊 Tide data loaded:', result.data);
+            
+            // Display the tide data
+            displayTideData(result.data);
+            
+            updateLastUpdateTime();
+        } else {
+            console.error('Failed to load tide data:', result.message);
+        }
+    } catch (error) {
+        console.error('Error loading tide data:', error);
+    }
+}
+
+// Display tide data on the page
+function displayTideData(tideData) {
+    if (!tideData) return;
     
-    // // Placeholder weather data
-    // document.getElementById('wind-speed').textContent = '54 mph';
-    // document.getElementById('weather-temp').textContent = '28°F';
-    // document.getElementById('visibility').textContent = '10 mi';
+    // Current height
+    if (tideData.current) {
+        const heightElement = document.getElementById('current-height');
+        if (heightElement) {
+            heightElement.textContent = `${tideData.current.height} ft`;
+        }
+    }
     
-    // Placeholder astronomy data
-    document.getElementById('moon-rise').textContent = '6:45 AM';
-    document.getElementById('moon-set').textContent = '4:32 PM';
-    document.getElementById('sunrise').textContent = '7:52 AM';
-    document.getElementById('sunset').textContent = '4:18 PM';
+    // Next high and low tides
+    if (tideData.next_high) {
+        const nextHighElement = document.getElementById('next-high');
+        const highTimeElement = document.getElementById('high-time');
+        
+        const highTime = formatTime(tideData.next_high.time);
+        
+        if (nextHighElement) {
+            nextHighElement.textContent = highTime;
+        }
+        if (highTimeElement) {
+            highTimeElement.textContent = highTime;
+        }
+    }
     
-    // Create simple tide chart
-    createTideChart();
+    if (tideData.next_low) {
+        const nextLowElement = document.getElementById('next-low');
+        const lowTimeElement = document.getElementById('low-time');
+        
+        const lowTime = formatTime(tideData.next_low.time);
+        
+        if (nextLowElement) {
+            nextLowElement.textContent = lowTime;
+        }
+        if (lowTimeElement) {
+            lowTimeElement.textContent = lowTime;
+        }
+    }
     
-    // Create tide table
-    createTideTable();
+    // Tide status (rising/falling) and dial
+    if (tideData.status) {
+        updateTideDial(
+            tideData.status.percentage,
+            tideData.status.is_rising
+        );
+    }
     
-    updateLastUpdateTime();
+    // Create tide chart with real data
+    if (tideData.predictions) {
+        createTideChart(tideData.predictions, tideData.current);
+    }
+    
+    // Create tide table with real data
+    if (tideData.predictions) {
+        createTideTable(tideData.predictions);
+    }
+    
+    console.log('✅ Tide data displayed');
+}
+
+// Format time from NOAA format to display format
+function formatTime(timeString) {
+    // NOAA format: "2025-11-28 14:30"
+    const date = new Date(timeString);
+    return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
 }
 
 // Draw tide dial arc
@@ -178,8 +249,8 @@ function updateTideDial(percentage, isRising) {
     }
 }
 
-// Create simple tide chart using Canvas
-function createTideChart() {
+// Create tide chart using real NOAA data
+function createTideChart(predictions, currentLevel) {
     const canvas = document.getElementById('tide-chart');
     if (!canvas) return;
     
@@ -196,14 +267,35 @@ function createTideChart() {
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
     
-    // Generate sample tide data (sine wave)
-    const points = [];
-    const numPoints = 48; // 48 half-hours in a day
-    for (let i = 0; i < numPoints; i++) {
-        const x = padding + (i / (numPoints - 1)) * (width - 2 * padding);
-        const y = height / 2 + Math.sin((i / numPoints) * Math.PI * 2 - Math.PI / 2) * (height / 3);
-        points.push({ x, y });
-    }
+    // Filter today's predictions
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+    
+    const todaysPredictions = predictions.filter(pred => {
+        const predTime = new Date(pred.time);
+        return predTime >= todayStart && predTime < todayEnd;
+    });
+    
+    if (todaysPredictions.length === 0) return;
+    
+    // Find min/max heights for scaling
+    const heights = todaysPredictions.map(p => p.height);
+    const minHeight = Math.min(...heights) - 1;
+    const maxHeight = Math.max(...heights) + 1;
+    const heightRange = maxHeight - minHeight;
+    
+    // Convert predictions to canvas coordinates
+    const points = todaysPredictions.map(pred => {
+        const predTime = new Date(pred.time);
+        const hours = predTime.getHours() + predTime.getMinutes() / 60;
+        
+        const x = padding + (hours / 24) * (width - 2 * padding);
+        const y = height - padding - ((pred.height - minHeight) / heightRange) * (height - 2 * padding);
+        
+        return { x, y, time: predTime, height: pred.height, type: pred.type };
+    });
     
     // Draw grid lines
     ctx.strokeStyle = '#3a4555';
@@ -216,18 +308,40 @@ function createTideChart() {
         ctx.stroke();
     }
     
-    // Draw tide curve
-    ctx.strokeStyle = '#00a8e8';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
+    // Draw smooth curve through high/low points
+    if (points.length >= 2) {
+        ctx.strokeStyle = '#00a8e8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        // Create smooth curve using quadratic bezier
+        ctx.moveTo(points[0].x, points[0].y);
+        
+        for (let i = 0; i < points.length - 1; i++) {
+            const current = points[i];
+            const next = points[i + 1];
+            const midX = (current.x + next.x) / 2;
+            const midY = (current.y + next.y) / 2;
+            
+            ctx.quadraticCurveTo(current.x, current.y, midX, midY);
+        }
+        
+        // Last segment
+        const lastPoint = points[points.length - 1];
+        ctx.lineTo(lastPoint.x, lastPoint.y);
+        ctx.stroke();
+        
+        // Draw points for high/low tides
+        points.forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = point.type === 'H' ? '#ff4444' : '#4444ff';
+            ctx.fill();
+        });
     }
-    ctx.stroke();
     
-    // Draw current time indicator (vertical line)
-    const currentHour = new Date().getHours();
+    // Draw current time indicator
+    const currentHour = now.getHours() + now.getMinutes() / 60;
     const currentX = padding + (currentHour / 24) * (width - 2 * padding);
     ctx.strokeStyle = '#ffa500';
     ctx.lineWidth = 2;
@@ -238,7 +352,7 @@ function createTideChart() {
     ctx.stroke();
     ctx.setLineDash([]);
     
-    // Add labels
+    // Add time labels
     ctx.fillStyle = '#a0b5c0';
     ctx.font = '12px sans-serif';
     ctx.fillText('12 AM', padding, height - 10);
@@ -247,26 +361,58 @@ function createTideChart() {
     ctx.fillText('6 PM', padding + (width - 2 * padding) * 0.75, height - 10);
 }
 
-// Create tide table
-function createTideTable() {
+// Create tide table with real data
+function createTideTable(predictions) {
     const tableDiv = document.getElementById('tide-table');
     if (!tableDiv) return;
     
-    // Sample 7-day data
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const dates = [23, 24, 25, 26, 27, 28, 29];
+    // Group predictions by day
+    const dayGroups = {};
     
+    predictions.forEach(pred => {
+        const predDate = new Date(pred.time);
+        const dateKey = predDate.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        if (!dayGroups[dateKey]) {
+            dayGroups[dateKey] = {
+                highs: [],
+                lows: []
+            };
+        }
+        
+        if (pred.type === 'H') {
+            dayGroups[dateKey].highs.push(pred);
+        } else {
+            dayGroups[dateKey].lows.push(pred);
+        }
+    });
+    
+    // Build table HTML
     let html = '<table><thead><tr><th>Day</th><th>High Tide</th><th>Low Tide</th></tr></thead><tbody>';
     
-    for (let i = 0; i < 7; i++) {
+    Object.keys(dayGroups).slice(0, 7).forEach(dateKey => {
+        const day = dayGroups[dateKey];
+        
+        const highsHtml = day.highs.map(h => 
+            `${formatTime(h.time)} (${h.height}ft)`
+        ).join('<br>');
+        
+        const lowsHtml = day.lows.map(l => 
+            `${formatTime(l.time)} (${l.height}ft)`
+        ).join('<br>');
+        
         html += `
             <tr>
-                <td><strong>${days[i]} ${dates[i]}</strong></td>
-                <td>9:${String(i * 5).padStart(2, '0')} AM (${8 + i * 0.3}ft)<br>9:${String(30 + i * 5).padStart(2, '0')} PM (${8.5 + i * 0.2}ft)</td>
-                <td>3:${String(i * 7).padStart(2, '0')} AM (${2 - i * 0.2}ft)<br>3:${String(30 + i * 7).padStart(2, '0')} PM (${1.8 - i * 0.15}ft)</td>
+                <td><strong>${dateKey}</strong></td>
+                <td>${highsHtml || 'N/A'}</td>
+                <td>${lowsHtml || 'N/A'}</td>
             </tr>
         `;
-    }
+    });
     
     html += '</tbody></table>';
     tableDiv.innerHTML = html;
@@ -342,8 +488,10 @@ function switchView(index) {
     state.currentView = index;
     
     // Redraw chart if switching to chart view
-    if (index === 0) {
-        setTimeout(createTideChart, 100);
+    if (index === 0 && state.tideData) {
+        setTimeout(() => {
+            createTideChart(state.tideData.predictions, state.tideData.current);
+        }, 100);
     }
 }
 
@@ -360,28 +508,14 @@ function updateLastUpdateTime() {
     }
 }
 
-// Utility: Format date/time
-function formatDateTime(date, options = {}) {
-    return new Date(date).toLocaleString('en-US', options);
-}
-
-// Export functions for use in other scripts if needed
-window.TideWatch = {
-    updateTideDial,
-    createTideChart,
-    switchView,
-    state
-};
-
 // Load weather data from API
 async function loadWeatherData() {
     try {
         const response = await fetch(`${API_BASE}/api/weather`);
         const data = await response.json();
         state.weatherData = data;
-        console.log('Weather data:', data);
         
-        // Display the weather!
+        // Display the weather
         displayWeather(data);
         
         updateLastUpdateTime();
@@ -392,7 +526,6 @@ async function loadWeatherData() {
     }
 }
 
-// Display weather data on the page
 // Display weather data on the page
 function displayWeather(weatherData) {
     if (!weatherData || !weatherData.data) {
@@ -419,6 +552,71 @@ function displayWeather(weatherData) {
     if (visibilityElement) {
         visibilityElement.textContent = weather.visibility || 'N/A';
     }
-    
-    console.log('✅ Weather displayed:', weather.temperature, weather.wind_speed, weather.wind_direction, 'Vis:', weather.visibility);
 }
+
+// Load astronomy data from API
+async function loadAstronomyData() {
+    try {
+        const response = await fetch(`${API_BASE}/api/astronomy`);
+        const data = await response.json();
+        state.astronomyData = data;
+        console.log('Astronomy data:', data);
+        
+        // Display the astronomy data!
+        displayAstronomy(data);
+        
+        updateLastUpdateTime();
+        return data;
+    } catch (error) {
+        console.error('Failed to load astronomy data:', error);
+        return null;
+    }
+}
+
+// Display astronomy data on the page
+function displayAstronomy(astronomyData) {
+    if (!astronomyData || !astronomyData.data) {
+        console.log('No astronomy data to display');
+        return;
+    }
+    
+    const astro = astronomyData.data;
+    
+    // Update sunrise/sunset
+    const sunriseElement = document.getElementById('sunrise');
+    if (sunriseElement) {
+        sunriseElement.textContent = astro.sunrise || '--:--';
+    }
+    
+    const sunsetElement = document.getElementById('sunset');
+    if (sunsetElement) {
+        sunsetElement.textContent = astro.sunset || '--:--';
+    }
+    
+    // Update moonrise/moonset
+    const moonriseElement = document.getElementById('moon-rise');
+    if (moonriseElement) {
+        moonriseElement.textContent = astro.moonrise || '--:--';
+    }
+    
+    const moonsetElement = document.getElementById('moon-set');
+    if (moonsetElement) {
+        moonsetElement.textContent = astro.moonset || '--:--';
+    }
+    
+    // Update moon phase emoji
+    const moonPhaseElement = document.getElementById('moon-phase');
+    if (moonPhaseElement && astro.moon_emoji) {
+        moonPhaseElement.textContent = astro.moon_emoji;
+    }
+    
+    console.log('✅ Astronomy displayed:', astro.sunrise, astro.sunset, 'Moon:', astro.moon_phase, astro.moon_emoji);
+}
+
+// Export functions for use in other scripts if needed
+window.TideWatch = {
+    updateTideDial,
+    createTideChart,
+    switchView,
+    state
+};

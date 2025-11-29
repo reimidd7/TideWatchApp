@@ -10,12 +10,40 @@ const state = {
     tideData: null,
     weatherData: null,
     astronomyData: null,
-    lastUpdate: null
+    lastUpdate: null,
+    isConnected: false
 };
+
+// Set initial placeholder values
+function setPlaceholders() {
+    // Tide placeholders
+    document.getElementById('current-height').textContent = '--.- ft';
+    document.getElementById('next-high').textContent = '--:--';
+    document.getElementById('next-low').textContent = '--:--';
+    document.getElementById('high-time').textContent = '--:--';
+    document.getElementById('low-time').textContent = '--:--';
+    document.getElementById('tide-direction').textContent = '--';
+    document.getElementById('tide-status').textContent = '';
+    
+    // Weather placeholders
+    document.getElementById('weather-temp').textContent = '--°F';
+    document.getElementById('wind-speed').textContent = '-- mph';
+    document.getElementById('visibility').textContent = '-- mi';
+    
+    // Astronomy placeholders
+    document.getElementById('sunrise').textContent = '--:--';
+    document.getElementById('sunset').textContent = '--:--';
+    document.getElementById('moon-rise').textContent = '--:--';
+    document.getElementById('moon-set').textContent = '--:--';
+    
+    // Update status
+    document.getElementById('last-update').textContent = 'Connecting...';
+}
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🌊 TideWatch initializing...');
+    setPlaceholders();
     initApp();
 });
 
@@ -95,6 +123,8 @@ async function checkHealth() {
         if (data.status === 'ok') {
             updateConnectionStatus(true);
             console.log('💚 Server healthy');
+        } else {
+            updateConnectionStatus(false);
         }
     } catch (error) {
         console.error('❌ Health check failed:', error);
@@ -104,9 +134,18 @@ async function checkHealth() {
 
 // Update connection status indicator
 function updateConnectionStatus(isConnected) {
+    state.isConnected = isConnected;
     const statusElement = document.getElementById('connection-status');
     if (statusElement) {
         statusElement.textContent = isConnected ? '🟢 Connected' : '🔴 Disconnected';
+    }
+    
+    // Update last update text based on connection
+    if (!isConnected) {
+        const updateElement = document.getElementById('last-update');
+        if (updateElement) {
+            updateElement.textContent = 'Connection Lost';
+        }
     }
 }
 
@@ -118,6 +157,7 @@ async function loadTideData() {
         
         if (result.status === 'ok') {
             state.tideData = result.data;
+            state.isConnected = true;
             console.log('🌊 Tide data loaded:', result.data);
             
             // Display the tide data
@@ -126,83 +166,147 @@ async function loadTideData() {
             updateLastUpdateTime();
         } else {
             console.error('Failed to load tide data:', result.message);
+            setTidePlaceholders();
         }
     } catch (error) {
         console.error('Error loading tide data:', error);
+        state.isConnected = false;
+        updateConnectionStatus(false);
+        setTidePlaceholders();
+    }
+}
+
+// Set tide-related placeholders
+function setTidePlaceholders() {
+    document.getElementById('current-height').textContent = '--.- ft';
+    document.getElementById('next-high').textContent = '--:--';
+    document.getElementById('next-low').textContent = '--:--';
+    document.getElementById('high-time').textContent = '--:--';
+    document.getElementById('low-time').textContent = '--:--';
+    document.getElementById('tide-direction').textContent = '--';
+    document.getElementById('tide-status').textContent = '';
+    
+    // Clear chart
+    const canvas = document.getElementById('tide-chart');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Clear table
+    const tableDiv = document.getElementById('tide-table');
+    if (tableDiv) {
+        tableDiv.innerHTML = '<p style="text-align: center; color: #a0b5c0; padding: 2rem;">No tide data available</p>';
     }
 }
 
 // Display tide data on the page
 function displayTideData(tideData) {
-    if (!tideData) return;
+    if (!tideData) {
+        setTidePlaceholders();
+        return;
+    }
     
     // Current height
-    if (tideData.current) {
-        const heightElement = document.getElementById('current-height');
-        if (heightElement) {
+    const heightElement = document.getElementById('current-height');
+    if (heightElement) {
+        if (tideData.current && tideData.current.height != null) {
             heightElement.textContent = `${tideData.current.height} ft`;
+        } else {
+            heightElement.textContent = '--.- ft';
         }
     }
     
-    // Next high and low tides
+    // Next high tide
+    const nextHighElement = document.getElementById('next-high');
+    const highTimeElement = document.getElementById('high-time');
     if (tideData.next_high) {
-        const nextHighElement = document.getElementById('next-high');
-        const highTimeElement = document.getElementById('high-time');
-        
-        const highTime = formatTime(tideData.next_high.time);
-        
-        if (nextHighElement) {
-            nextHighElement.textContent = highTime;
-        }
-        if (highTimeElement) {
-            highTimeElement.textContent = highTime;
-        }
+        const highTime = tideData.next_high.time_12hr || formatTime(tideData.next_high.time);
+        if (nextHighElement) nextHighElement.textContent = highTime;
+        if (highTimeElement) highTimeElement.textContent = highTime;
+    } else {
+        if (nextHighElement) nextHighElement.textContent = '--:--';
+        if (highTimeElement) highTimeElement.textContent = '--:--';
     }
     
+    // Next low tide
+    const nextLowElement = document.getElementById('next-low');
+    const lowTimeElement = document.getElementById('low-time');
     if (tideData.next_low) {
-        const nextLowElement = document.getElementById('next-low');
-        const lowTimeElement = document.getElementById('low-time');
-        
-        const lowTime = formatTime(tideData.next_low.time);
-        
-        if (nextLowElement) {
-            nextLowElement.textContent = lowTime;
-        }
-        if (lowTimeElement) {
-            lowTimeElement.textContent = lowTime;
-        }
+        const lowTime = tideData.next_low.time_12hr || formatTime(tideData.next_low.time);
+        if (nextLowElement) nextLowElement.textContent = lowTime;
+        if (lowTimeElement) lowTimeElement.textContent = lowTime;
+    } else {
+        if (nextLowElement) nextLowElement.textContent = '--:--';
+        if (lowTimeElement) lowTimeElement.textContent = '--:--';
     }
     
     // Tide status (rising/falling) and dial
-    if (tideData.status) {
+    if (tideData.status && tideData.status.has_predictions !== false) {
         updateTideDial(
             tideData.status.percentage,
             tideData.status.is_rising
         );
+    } else {
+        // Reset dial if no status
+        document.getElementById('tide-direction').textContent = '--';
+        document.getElementById('tide-status').textContent = '';
     }
     
     // Create tide chart with real data
-    if (tideData.predictions) {
+    if (tideData.predictions && tideData.predictions.length > 0) {
         createTideChart(tideData.predictions, tideData.current);
+    } else {
+        // Clear chart if no predictions
+        const canvas = document.getElementById('tide-chart');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
     }
     
     // Create tide table with real data
-    if (tideData.predictions) {
+    if (tideData.predictions && tideData.predictions.length > 0) {
         createTideTable(tideData.predictions);
+    } else {
+        const tableDiv = document.getElementById('tide-table');
+        if (tableDiv) {
+            tableDiv.innerHTML = '<p style="text-align: center; color: #a0b5c0; padding: 2rem;">No tide data available</p>';
+        }
     }
     
     console.log('✅ Tide data displayed');
 }
 
-// Format time from NOAA format to display format
+// Format time from NOAA format to display format (12-hour with AM/PM)
 function formatTime(timeString) {
-    // NOAA format: "2025-11-28 14:30"
-    const date = new Date(timeString);
-    return date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-    });
+    // Handle null/undefined
+    if (!timeString) {
+        return '--:--';
+    }
+    
+    // If already in 12-hour format (has AM/PM), return as-is
+    if (timeString.includes('AM') || timeString.includes('PM')) {
+        return timeString;
+    }
+    
+    try {
+        // NOAA format: "2025-11-28 14:30"
+        const date = new Date(timeString);
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return '--:--';
+        }
+        
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    } catch (e) {
+        return '--:--';
+    }
 }
 
 // Draw tide dial arc
@@ -397,12 +501,13 @@ function createTideTable(predictions) {
     Object.keys(dayGroups).slice(0, 7).forEach(dateKey => {
         const day = dayGroups[dateKey];
         
+        // Use pre-formatted 12hr times if available
         const highsHtml = day.highs.map(h => 
-            `${formatTime(h.time)} (${h.height}ft)`
+            `${h.time_12hr || formatTime(h.time)} (${h.height}ft)`
         ).join('<br>');
         
         const lowsHtml = day.lows.map(l => 
-            `${formatTime(l.time)} (${l.height}ft)`
+            `${l.time_12hr || formatTime(l.time)} (${l.height}ft)`
         ).join('<br>');
         
         html += `
@@ -513,23 +618,36 @@ async function loadWeatherData() {
     try {
         const response = await fetch(`${API_BASE}/api/weather`);
         const data = await response.json();
-        state.weatherData = data;
         
-        // Display the weather
-        displayWeather(data);
-        
-        updateLastUpdateTime();
-        return data;
+        if (data.status === 'ok') {
+            state.weatherData = data;
+            displayWeather(data);
+            updateLastUpdateTime();
+            return data;
+        } else {
+            console.error('Failed to load weather data');
+            setWeatherPlaceholders();
+            return null;
+        }
     } catch (error) {
         console.error('Failed to load weather data:', error);
+        setWeatherPlaceholders();
         return null;
     }
+}
+
+// Set weather-related placeholders
+function setWeatherPlaceholders() {
+    document.getElementById('weather-temp').textContent = '--°F';
+    document.getElementById('wind-speed').textContent = '-- mph';
+    document.getElementById('visibility').textContent = '-- mi';
 }
 
 // Display weather data on the page
 function displayWeather(weatherData) {
     if (!weatherData || !weatherData.data) {
         console.log('No weather data to display');
+        setWeatherPlaceholders();
         return;
     }
     
@@ -538,19 +656,27 @@ function displayWeather(weatherData) {
     // Update temperature
     const tempElement = document.getElementById('weather-temp');
     if (tempElement) {
-        tempElement.textContent = `${weather.temperature}°${weather.temperature_unit}`;
+        if (weather.temperature != null) {
+            tempElement.textContent = `${weather.temperature}°${weather.temperature_unit || 'F'}`;
+        } else {
+            tempElement.textContent = '--°F';
+        }
     }
     
     // Update wind speed and direction
     const windElement = document.getElementById('wind-speed');
     if (windElement) {
-        windElement.textContent = `${weather.wind_speed} ${weather.wind_direction}`;
+        if (weather.wind_speed && weather.wind_direction) {
+            windElement.textContent = `${weather.wind_speed} ${weather.wind_direction}`;
+        } else {
+            windElement.textContent = '-- mph';
+        }
     }
     
     // Update visibility
     const visibilityElement = document.getElementById('visibility');
     if (visibilityElement) {
-        visibilityElement.textContent = weather.visibility || 'N/A';
+        visibilityElement.textContent = weather.visibility || '-- mi';
     }
 }
 
@@ -559,24 +685,38 @@ async function loadAstronomyData() {
     try {
         const response = await fetch(`${API_BASE}/api/astronomy`);
         const data = await response.json();
-        state.astronomyData = data;
-        console.log('Astronomy data:', data);
         
-        // Display the astronomy data!
-        displayAstronomy(data);
-        
-        updateLastUpdateTime();
-        return data;
+        if (data.status === 'ok') {
+            state.astronomyData = data;
+            console.log('Astronomy data:', data);
+            displayAstronomy(data);
+            updateLastUpdateTime();
+            return data;
+        } else {
+            console.error('Failed to load astronomy data');
+            setAstronomyPlaceholders();
+            return null;
+        }
     } catch (error) {
         console.error('Failed to load astronomy data:', error);
+        setAstronomyPlaceholders();
         return null;
     }
+}
+
+// Set astronomy-related placeholders
+function setAstronomyPlaceholders() {
+    document.getElementById('sunrise').textContent = '--:--';
+    document.getElementById('sunset').textContent = '--:--';
+    document.getElementById('moon-rise').textContent = '--:--';
+    document.getElementById('moon-set').textContent = '--:--';
 }
 
 // Display astronomy data on the page
 function displayAstronomy(astronomyData) {
     if (!astronomyData || !astronomyData.data) {
         console.log('No astronomy data to display');
+        setAstronomyPlaceholders();
         return;
     }
     

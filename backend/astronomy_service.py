@@ -1,7 +1,7 @@
 import requests
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
-import time
+import pytz
 
 class AstronomyService:
     """Handles astronomical data from US Naval Observatory API"""
@@ -22,17 +22,15 @@ class AstronomyService:
 
     def _get_timezone_offset(self) -> int:
         """Get current timezone offset accounting for DST"""
-        # Get current time
-        now = datetime.now()
+        # Use pytz to automatically determine if we're in DST
+        tz = pytz.timezone('America/Los_Angeles')
+        now = datetime.now(tz)
         
-        # Check if we're in DST (in the US, DST is roughly March-November)
-        # More accurate: check if local time offset is different from standard
-        if time.daylight and time.localtime().tm_isdst:
-            # We're in DST (PDT = -7)
-            return -7
-        else:
-            # We're in standard time (PST = -8)
-            return -8
+        # Get the UTC offset in hours
+        offset_seconds = now.utcoffset().total_seconds()
+        offset_hours = int(offset_seconds / 3600)
+        
+        return offset_hours
 
     def get_astronomy_data(self) -> Optional[Dict]:
         """Get complete astronomy data (sun/moon rise/set + moon phase)"""
@@ -165,6 +163,13 @@ class AstronomyService:
             moonrise = self._find_phenomenon(moon_data, 'Rise')
             moonset = self._find_phenomenon(moon_data, 'Set')
             
+            # Convert all times to 12-hour format
+            sunrise = self._convert_to_12hr(sunrise) if sunrise else None
+            sunset = self._convert_to_12hr(sunset) if sunset else None
+            solar_noon = self._convert_to_12hr(solar_noon) if solar_noon else None
+            moonrise = self._convert_to_12hr(moonrise) if moonrise else None
+            moonset = self._convert_to_12hr(moonset) if moonset else None
+            
             return {
                 'sunrise': sunrise,
                 'sunset': sunset,
@@ -183,6 +188,19 @@ class AstronomyService:
             if item.get('phen') == phenomenon:
                 return item.get('time', '--:--')
         return None
+    
+    def _convert_to_12hr(self, time_str: Optional[str]) -> Optional[str]:
+        """Convert 24-hour time to 12-hour format with AM/PM"""
+        if not time_str or time_str == '--:--':
+            return time_str
+        
+        try:
+            # Parse the time (format is usually "HH:MM")
+            time_obj = datetime.strptime(time_str, '%H:%M')
+            # Format to 12-hour with AM/PM
+            return time_obj.strftime('%I:%M %p').lstrip('0')  # Remove leading zero
+        except:
+            return time_str
 
     def _get_moon_phase(self) -> Dict:
         """Get current moon phase data"""
@@ -202,7 +220,7 @@ class AstronomyService:
             return {
                 'phase_name': 'Unknown',
                 'illumination': 50,
-                'emoji': '🌓'
+                'emoji': '🌔'
             }
 
     def _fetch_moon_phases(self, year: int):
@@ -255,7 +273,7 @@ class AstronomyService:
             return {
                 'phase_name': 'Unknown',
                 'illumination': 50,
-                'emoji': '🌓'
+                'emoji': '🌔'
             }
         
         # Find the most recent phase and next phase
@@ -296,7 +314,7 @@ class AstronomyService:
         return {
             'phase_name': 'Unknown',
             'illumination': 50,
-            'emoji': '🌓'
+            'emoji': '🌔'
         }
 
     def _get_detailed_phase(self, recent_phase: Dict, next_phase: Optional[Dict], 
@@ -376,33 +394,6 @@ class AstronomyService:
             'Last Quarter': '🌗'
         }
         return emoji_map.get(phase_name, '🌙')
-    
-    def _get_timezone_offset(self) -> int:
-        """Get current timezone offset accounting for DST"""
-        import pytz
-        
-        # Use pytz to automatically determine if we're in DST
-        tz = pytz.timezone('America/Los_Angeles')
-        now = datetime.now(tz)
-        
-        # Get the UTC offset in hours
-        offset_seconds = now.utcoffset().total_seconds()
-        offset_hours = int(offset_seconds / 3600)
-        
-        return offset_hours
-    
-    def _convert_to_12hr(self, time_str: Optional[str]) -> Optional[str]:
-        """Convert 24-hour time to 12-hour format with AM/PM"""
-        if not time_str or time_str == '--:--':
-            return time_str
-        
-        try:
-            # Parse the time (format is usually "HH:MM")
-            time_obj = datetime.strptime(time_str, '%H:%M')
-            # Format to 12-hour with AM/PM
-            return time_obj.strftime('%I:%M %p').lstrip('0')  # Remove leading zero
-        except:
-            return time_str
 
 
 # Test code

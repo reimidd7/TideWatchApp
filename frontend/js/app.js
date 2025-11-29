@@ -11,8 +11,43 @@ const state = {
     weatherData: null,
     astronomyData: null,
     lastUpdate: null,
-    isConnected: false
+    isConnected: false,
+    theme: 'dark' // default theme
 };
+
+// Theme Toggle
+function initTheme() {
+    // Check if user has a saved preference
+    const savedTheme = localStorage.getItem('tidewatch-theme') || 'dark';
+    state.theme = savedTheme;
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon();
+}
+
+function toggleTheme() {
+    const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+    state.theme = newTheme;
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('tidewatch-theme', newTheme);
+    updateThemeIcon();
+    
+    // Redraw chart with new colors
+    if (state.tideData && state.tideData.predictions) {
+        createTideChart(state.tideData.predictions, state.tideData.current);
+    }
+    
+    // Update tide dial colors
+    if (state.tideData && state.tideData.status) {
+        updateTideDial(state.tideData.status.percentage, state.tideData.status.is_rising);
+    }
+}
+
+function updateThemeIcon() {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+    }
+}
 
 // Set initial placeholder values
 function setPlaceholders() {
@@ -43,6 +78,16 @@ function setPlaceholders() {
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🌊 TideWatch initializing...');
+    
+    // Initialize theme
+    initTheme();
+    
+    // Set up theme toggle button
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+    
     setPlaceholders();
     initApp();
 });
@@ -79,6 +124,7 @@ async function initApp() {
     
     console.log('✅ TideWatch ready!');
 }
+
 // Update clock display
 function updateClock() {
     const now = new Date();
@@ -196,7 +242,7 @@ function setTidePlaceholders() {
     // Clear table
     const tableDiv = document.getElementById('tide-table');
     if (tableDiv) {
-        tableDiv.innerHTML = '<p style="text-align: center; color: #a0b5c0; padding: 2rem;">No tide data available</p>';
+        tableDiv.innerHTML = '<p style="text-align: center; padding: 2rem;">No tide data available</p>';
     }
 }
 
@@ -271,7 +317,7 @@ function displayTideData(tideData) {
     } else {
         const tableDiv = document.getElementById('tide-table');
         if (tableDiv) {
-            tableDiv.innerHTML = '<p style="text-align: center; color: #a0b5c0; padding: 2rem;">No tide data available</p>';
+            tableDiv.innerHTML = '<p style="text-align: center; padding: 2rem;">No tide data available</p>';
         }
     }
     
@@ -309,6 +355,11 @@ function formatTime(timeString) {
     }
 }
 
+// Get CSS variable value
+function getCSSVar(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
 // Draw tide dial arc
 function updateTideDial(percentage, isRising) {
     const svg = document.querySelector('.tide-dial');
@@ -338,8 +389,10 @@ function updateTideDial(percentage, isRising) {
     const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
     arc.setAttribute('d', pathData);
     
-    // Set color based on rising/falling
-    arc.setAttribute('stroke', isRising ? '#ff4444' : '#4444ff');
+    // Set color based on rising/falling using CSS variables
+    const highTideColor = getCSSVar('--color-high-tide');
+    const lowTideColor = getCSSVar('--color-low-tide');
+    arc.setAttribute('stroke', isRising ? highTideColor : lowTideColor);
     
     // Update text
     if (directionText && statusText) {
@@ -370,6 +423,13 @@ function createTideChart(predictions, currentLevel) {
     
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
+    
+    // Get CSS colors
+    const borderColor = getCSSVar('--color-border');
+    const accentColor = getCSSVar('--color-accent');
+    const highTideColor = getCSSVar('--color-high-tide');
+    const lowTideColor = getCSSVar('--color-low-tide');
+    const textDimColor = getCSSVar('--color-text-dim');
     
     // Filter today's predictions
     const now = new Date();
@@ -402,7 +462,7 @@ function createTideChart(predictions, currentLevel) {
     });
     
     // Draw grid lines
-    ctx.strokeStyle = '#3a4555';
+    ctx.strokeStyle = borderColor;
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
         const y = padding + (i / 4) * (height - 2 * padding);
@@ -414,7 +474,7 @@ function createTideChart(predictions, currentLevel) {
     
     // Draw smooth curve through high/low points
     if (points.length >= 2) {
-        ctx.strokeStyle = '#00a8e8';
+        ctx.strokeStyle = accentColor;
         ctx.lineWidth = 3;
         ctx.beginPath();
         
@@ -439,7 +499,7 @@ function createTideChart(predictions, currentLevel) {
         points.forEach(point => {
             ctx.beginPath();
             ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
-            ctx.fillStyle = point.type === 'H' ? '#ff4444' : '#4444ff';
+            ctx.fillStyle = point.type === 'H' ? highTideColor : lowTideColor;
             ctx.fill();
         });
     }
@@ -457,7 +517,7 @@ function createTideChart(predictions, currentLevel) {
     ctx.setLineDash([]);
     
     // Add time labels
-    ctx.fillStyle = '#a0b5c0';
+    ctx.fillStyle = textDimColor;
     ctx.font = '12px sans-serif';
     ctx.fillText('12 AM', padding, height - 10);
     ctx.fillText('6 AM', padding + (width - 2 * padding) * 0.25, height - 10);
@@ -758,5 +818,6 @@ window.TideWatch = {
     updateTideDial,
     createTideChart,
     switchView,
+    toggleTheme,
     state
 };

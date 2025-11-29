@@ -7,6 +7,11 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">
+        🌙
+    </button>
+
     <!-- Main Container -->
     <div id="app" class="container">
         
@@ -34,37 +39,43 @@
         <!-- Main Content Area -->
         <main class="main-content">
             
-            <!-- Top Grid - Info Cards -->
-            <div class="info-grid">
-                
-                <!-- Tide Dial Card -->
-                <div class="info-card tide-dial-card">
-                    <div class="tide-dial-container">
-                        <svg class="tide-dial" viewBox="0 0 200 200">
-                            <!-- Outer circle -->
-                            <circle cx="100" cy="100" r="80" fill="none" stroke="#3a4555" stroke-width="2"/>
-                            
-                            <!-- Tide level arc (will be animated) -->
-                            <path id="tide-arc" d="" fill="none" stroke="#ff4444" stroke-width="8" stroke-linecap="round"/>
-                            
-                            <!-- Center circle -->
-                            <circle cx="100" cy="100" r="60" fill="#1a2332" stroke="#3a4555" stroke-width="1"/>
-                            
-                            <!-- High tide marker -->
-                            <text x="100" y="30" text-anchor="middle" fill="#a0b5c0" font-size="10">High</text>
-                            <text x="100" y="42" text-anchor="middle" fill="#00a8e8" font-size="12" font-weight="bold" id="high-time">9:08 AM</text>
-                            
-                            <!-- Low tide marker -->
-                            <text x="100" y="175" text-anchor="middle" fill="#a0b5c0" font-size="10">Low</text>
-                            <text x="100" y="187" text-anchor="middle" fill="#00a8e8" font-size="12" font-weight="bold" id="low-time">7:34 PM</text>
-                            
-                            <!-- Rising/Falling indicator -->
-                            <text x="100" y="100" text-anchor="middle" fill="#e8f1f5" font-size="14" font-weight="bold" id="tide-direction">Rising</text>
-                            <text x="100" y="115" text-anchor="middle" fill="#a0b5c0" font-size="10" id="tide-status">↑</text>
-                        </svg>
+            <!-- Top Section - Tide Dial + Weather/Astro -->
+            <div class="top-section">
+                <!-- Tide Dial - Left Side -->
+                <div class="tide-dial-section">
+                    <div class="info-card tide-dial-card">
+                        <div class="tide-dial-container">
+                            <svg class="tide-dial" viewBox="0 0 200 200">
+                                <!-- Outer circle -->
+                                <circle cx="100" cy="100" r="80" fill="none" stroke-width="2"/>
+                                
+                                <!-- Tide level arc (will be animated) -->
+                                <path id="tide-arc" d="" fill="none" stroke-width="8" stroke-linecap="round"/>
+                                
+                                <!-- Center circle -->
+                                <circle cx="100" cy="100" r="60" fill-opacity="1" stroke-width="1"/>
+                                
+                                <!-- High tide marker -->
+                                <text x="100" y="30" text-anchor="middle" font-size="10" class="tide-label">High</text>
+                                <text x="100" y="42" text-anchor="middle" font-size="12" font-weight="bold" id="high-time" class="tide-value">9:08 AM</text>
+                                
+                                <!-- Low tide marker -->
+                                <text x="100" y="175" text-anchor="middle" font-size="10" class="tide-label">Low</text>
+                                <text x="100" y="187" text-anchor="middle" font-size="12" font-weight="bold" id="low-time" class="tide-value">7:34 PM</text>
+                                
+                                <!-- Rising/Falling indicator -->
+                                <text x="100" y="100" text-anchor="middle" font-size="14" font-weight="bold" id="tide-direction" class="tide-text">Rising</text>
+                                <text x="100" y="115" text-anchor="middle" font-size="10" id="tide-status" class="tide-label">↑</text>
+                            </svg>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Right Side - Weather and Astronomy -->
+                <div class="right-panels">
+                    <!-- Top Grid - Weather Info Cards -->
+                    <div class="info-grid">
+                
                 <!-- Wind Card -->
                 <div class="info-card">
                     <h3>Wind Speed and Direction</h3>
@@ -91,10 +102,10 @@
                         <div class="visibility-value" id="visibility">10 mi</div>
                     </div>
                 </div>
-            </div>
+                    </div>
 
-            <!-- Astronomy Section -->
-            <div class="astronomy-section">
+                    <!-- Astronomy Section -->
+                    <div class="astronomy-section">
                 
                 <!-- Moon -->
                 <div class="astro-card">
@@ -123,6 +134,8 @@
                             <span class="label">Sunset:</span>
                             <span class="value" id="sunset">--:--</span>
                         </div>
+                    </div>
+                </div>
                     </div>
                 </div>
             </div>

@@ -1,22 +1,48 @@
-/* TideWatch Styles - Fisherman's Design */
+/* TideWatch Styles - Fisherman's Design with Dark/Light Mode */
 
-/* CSS Variables */
+/* CSS Variables - Dark Mode (Default) */
 :root {
-    --color-primary: #0077be;
-    --color-secondary: #00a8e8;
-    --color-accent: #ffa500;
-    --color-rising: #ff4444;
-    --color-falling: #4444ff;
-    --color-bg: #1a2332;
-    --color-bg-light: #2a3545;
-    --color-card: #232d3f;
-    --color-text: #e8f1f5;
-    --color-text-dim: #a0b5c0;
-    --color-border: #3a4555;
+    --color-bg: #132E39;           /* Jet Black */
+    --color-primary: #2A545C;      /* Dark Slate Grey */
+    --color-secondary: #6F8F93;    /* Slate Grey */
+    --color-accent: #A5C3C8;       /* Light Blue */
+    --color-text: #E3F2F4;         /* Azure Mist */
+    --color-text-dim: #6F8F93;     /* Slate Grey for dimmed text */
+    --color-border: #6F8F93;       /* Slate Grey */
+    
+    /* Tide-specific colors */
+    --color-high-tide: #D95E5E;    /* Lobster Pink */
+    --color-low-tide: #33C7FF;     /* Deep Sky Blue */
+    
+    /* Reserved for later */
+    --color-turquoise: #00D1B2;
+    --color-slate-blue: #6D6BC9;
+    
+    /* UI Colors */
+    --color-card: var(--color-primary);
+    --color-status-bar: var(--color-accent);
     
     --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --spacing: 1rem;
     --radius: 12px;
+}
+
+/* Light Mode */
+[data-theme="light"] {
+    --color-bg: #F2F6F7;           /* Platinum */
+    --color-primary: #D8E3E5;      /* Alabaster Grey */
+    --color-secondary: #BBCACD;    /* Silver */
+    --color-accent: #6A8FA0;       /* Air Force Blue */
+    --color-text: #1C2E34;         /* Jet Black */
+    --color-text-dim: #6A8FA0;     /* Air Force Blue for dimmed text */
+    --color-border: #BBCACD;       /* Silver */
+    
+    /* Tide colors stay the same in light mode */
+    --color-high-tide: #D95E5E;
+    --color-low-tide: #33C7FF;
+    
+    --color-card: var(--color-primary);
+    --color-status-bar: var(--color-accent);
 }
 
 /* Reset */
@@ -28,10 +54,13 @@
 
 body {
     font-family: var(--font-main);
-    background: linear-gradient(135deg, #1a2332 0%, #0d1117 100%);
+    background: var(--color-bg);
     color: var(--color-text);
-    line-height: 1.6;
+    line-height: 1.4;
     overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    width: 100vw;
+    height: 100vh;
 }
 
 /* Main Container - Landscape Layout */
@@ -39,70 +68,81 @@ body {
     display: flex;
     height: 100vh;
     width: 100vw;
+    padding-bottom: 40px; /* Space for status bar */
 }
 
 /* Left Side Panel */
 .side-panel {
-    width: 280px;
+    width: 240px;
     background: var(--color-card);
     border-right: 2px solid var(--color-border);
-    padding: 2rem 1.5rem;
+    padding: 1.2rem 1rem;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.2rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    margin-bottom: 0;
+    margin-top: 5px;
 }
 
 .location-title {
-    font-size: 1.4rem;
-    color: var(--color-secondary);
+    font-size: 1.2rem;
+    color: var(--color-accent);
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
 }
 
 .current-height {
     text-align: center;
-    padding: 1.5rem;
-    background: rgba(0, 168, 232, 0.1);
+    padding: 1rem;
+    background: var(--color-bg);
     border-radius: var(--radius);
-    border: 2px solid var(--color-secondary);
+    border: 2px solid var(--color-accent);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .current-height .label {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--color-text-dim);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
+    transition: color 0.3s ease;
 }
 
 .current-height .value {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: bold;
-    color: var(--color-secondary);
+    color: var(--color-accent);
+    transition: color 0.3s ease;
 }
 
 .tide-times {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.8rem;
 }
 
 .tide-time {
-    padding: 1rem;
-    background: var(--color-bg-light);
+    padding: 0.8rem;
+    background: var(--color-bg);
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: background-color 0.3s ease;
 }
 
 .tide-time .label {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--color-text-dim);
+    transition: color 0.3s ease;
 }
 
 .tide-time .value {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: bold;
     color: var(--color-text);
+    transition: color 0.3s ease;
 }
 
 /* Main Content Area */
@@ -110,47 +150,78 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 1.5rem;
-    gap: 1rem;
-    overflow-y: auto;
+    padding: 1rem;
+    padding-bottom: 0;
+    gap: 0.8rem;
+    overflow: hidden;
+}
+
+/* Top Section - Tide Dial + Weather/Astro */
+.top-section {
+    display: flex;
+    gap: 0.8rem;
+    align-items: stretch;
+}
+
+/* Tide Dial Section - Left Side */
+.tide-dial-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.tide-dial-section .tide-dial-card {
+    width: auto;
+    min-width: 200px;
+}
+
+/* Right Panels Container */
+.right-panels {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
 }
 
 /* Top Info Grid */
 .info-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
 }
 
 .info-card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    padding: 1.5rem;
+    padding: 1rem;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 200px;
+    min-height: 180px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .info-card h3 {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     color: var(--color-text-dim);
-    margin-bottom: 1rem;
+    margin-bottom: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    transition: color 0.3s ease;
 }
 
 /* Tide Dial */
 .tide-dial-card {
     position: relative;
+    min-height: 180px !important;
 }
 
 .tide-dial-container {
     width: 100%;
-    max-width: 180px;
+    max-width: 500px;
 }
 
 .tide-dial {
@@ -176,18 +247,19 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
 .wind-arrow {
-    font-size: 4rem;
+    font-size: 3rem;
     transition: transform 0.5s ease;
 }
 
 .wind-speed {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: bold;
-    color: var(--color-secondary);
+    color: var(--color-accent);
+    transition: color 0.3s ease;
 }
 
 /* Weather Display */
@@ -195,17 +267,18 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
 .weather-icon {
-    font-size: 4rem;
+    font-size: 3rem;
 }
 
 .weather-temp {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: bold;
     color: var(--color-text);
+    transition: color 0.3s ease;
 }
 
 /* Visibility Display */
@@ -213,46 +286,48 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
 .visibility-icon {
-    font-size: 4rem;
+    font-size: 3rem;
 }
 
 .visibility-value {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: bold;
     color: var(--color-text);
+    transition: color 0.3s ease;
 }
 
 /* Astronomy Section */
 .astronomy-section {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 0.8rem;
 }
 
 .astro-card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    padding: 1.5rem;
+    padding: 1rem;
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 1.2rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .moon-phase,
 .sun-icon {
-    font-size: 5rem;
+    font-size: 3.5rem;
     flex-shrink: 0;
 }
 
 .astro-times {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex: 1;
 }
 
@@ -264,13 +339,15 @@ body {
 
 .astro-time .label {
     color: var(--color-text-dim);
-    font-size: 0.95rem;
+    font-size: 0.85rem;
+    transition: color 0.3s ease;
 }
 
 .astro-time .value {
     color: var(--color-text);
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
 }
 
 /* Tide Chart Section - Swipeable */
@@ -279,12 +356,13 @@ body {
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    padding: 1.5rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow: hidden;
-    min-height: 300px;
+    min-height: 200px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .swipe-container {
@@ -306,15 +384,17 @@ body {
 }
 
 .swipe-panel h3 {
-    color: var(--color-secondary);
-    margin-bottom: 1rem;
+    color: var(--color-accent);
+    margin-bottom: 0.6rem;
     text-align: center;
+    font-size: 1rem;
+    transition: color 0.3s ease;
 }
 
 .chart-container {
     flex: 1;
     position: relative;
-    min-height: 200px;
+    min-height: 150px;
 }
 
 #tide-chart {
@@ -335,21 +415,25 @@ body {
 
 .tide-table th,
 .tide-table td {
-    padding: 0.75rem;
+    padding: 0.5rem;
     text-align: left;
     border-bottom: 1px solid var(--color-border);
+    font-size: 0.85rem;
+    transition: border-color 0.3s ease;
 }
 
 .tide-table th {
-    background: var(--color-bg-light);
-    color: var(--color-secondary);
+    background: var(--color-bg);
+    color: var(--color-accent);
     font-weight: bold;
     position: sticky;
     top: 0;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .tide-table td {
     color: var(--color-text);
+    transition: color 0.3s ease;
 }
 
 /* Swipe Indicators */
@@ -357,7 +441,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: 0.6rem;
 }
 
 .indicator {
@@ -370,7 +454,7 @@ body {
 }
 
 .indicator.active {
-    background: var(--color-secondary);
+    background: var(--color-accent);
     transform: scale(1.3);
 }
 
@@ -380,15 +464,15 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 0.5rem 2rem;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
+    padding: 0.4rem 1.5rem;
+    background: var(--color-status-bar);
     border-top: 1px solid var(--color-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     z-index: 100;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 #connection-status {
@@ -400,10 +484,55 @@ body {
 #current-time {
     color: var(--color-text);
     font-weight: 500;
+    transition: color 0.3s ease;
 }
 
 #last-update {
     color: var(--color-text-dim);
+    transition: color 0.3s ease;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: fixed;
+    bottom: 3rem;
+    left: 0.6rem;
+    background: var(--color-card);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background: var(--color-accent);
+    transform: scale(1.1);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+/* SVG elements color updates */
+.tide-dial circle {
+    stroke: var(--color-border);
+    transition: stroke 0.3s ease;
+}
+
+.tide-dial circle[fill="#1a2332"] {
+    fill: var(--color-bg);
+    transition: fill 0.3s ease;
+}
+
+.tide-dial text {
+    transition: fill 0.3s ease;
 }
 
 /* Responsive adjustments */
@@ -428,5 +557,11 @@ body {
     .info-card,
     .astro-card {
         cursor: pointer;
+    }
+    
+    .theme-toggle {
+        width: 60px;
+        height: 60px;
+        font-size: 1.8rem;
     }
 }

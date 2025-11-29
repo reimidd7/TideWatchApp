@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TideWatch Touchscreen Simulator - 1280x800</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #2a2a2a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+
+        .simulator-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 100%;
+        }
+
+        .controls {
+            background: #1a1a1a;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .controls h2 {
+            font-size: 1.2rem;
+            color: #4a9eff;
+        }
+
+        .info {
+            display: flex;
+            gap: 30px;
+            font-size: 0.9rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .info-label {
+            color: #888;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .device-frame {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .screen-bezel {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .screen {
+            width: 1280px;
+            height: 800px;
+            background: #fff;
+            border: none;
+            display: block;
+            box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+        }
+
+        .touch-indicator {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #4a9eff;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .touch-indicator.active {
+            opacity: 0.7;
+            animation: touch-pulse 0.4s ease-out;
+        }
+
+        @keyframes touch-pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .scale-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .scale-btn {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .scale-btn:hover {
+            background: #444;
+            border-color: #4a9eff;
+        }
+
+        .scale-btn.active {
+            background: #4a9eff;
+            border-color: #4a9eff;
+        }
+
+        .simulator-wrapper {
+            transform-origin: top center;
+            transition: transform 0.3s ease;
+        }
+
+        /* Responsive scaling for smaller screens */
+        @media (max-width: 1400px) {
+            .simulator-wrapper {
+                transform: scale(0.9);
+            }
+        }
+
+        @media (max-width: 1280px) {
+            .simulator-wrapper {
+                transform: scale(0.8);
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .simulator-wrapper {
+                transform: scale(0.7);
+            }
+        }
+
+        @media (max-width: 950px) {
+            .simulator-wrapper {
+                transform: scale(0.6);
+            }
+        }
+
+        .reload-btn {
+            background: #4a9eff;
+            color: #fff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .reload-btn:hover {
+            background: #3a8eef;
+            transform: translateY(-1px);
+        }
+
+        .reload-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="simulator-container">
+        <!-- Controls -->
+        <div class="controls">
+            <h2>🖥️ TideWatch Touchscreen Simulator</h2>
+            
+            <div class="info">
+                <div class="info-item">
+                    <span class="info-label">Resolution</span>
+                    <span class="info-value">1280 × 800</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Screen Size</span>
+                    <span class="info-value">10.1"</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Aspect Ratio</span>
+                    <span class="info-value">16:10</span>
+                </div>
+            </div>
+
+            <div class="scale-controls">
+                <button class="reload-btn" onclick="reloadApp()">🔄 Reload</button>
+            </div>
+        </div>
+
+        <!-- Device Frame -->
+        <div class="simulator-wrapper" id="simulator-wrapper">
+            <div class="device-frame">
+                <div class="screen-bezel">
+                    <iframe 
+                        id="app-frame"
+                        class="screen" 
+                        src="http://localhost:5000"
+                        title="TideWatch App">
+                    </iframe>
+                    <div class="touch-indicator" id="touch-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const frame = document.getElementById('app-frame');
+        const touchIndicator = document.getElementById('touch-indicator');
+        const screenBezel = document.querySelector('.screen-bezel');
+
+        // Touch simulation - show visual feedback on clicks
+        screenBezel.addEventListener('mousedown', (e) => {
+            const rect = screenBezel.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            touchIndicator.style.left = x + 'px';
+            touchIndicator.style.top = y + 'px';
+            touchIndicator.classList.add('active');
+            
+            setTimeout(() => {
+                touchIndicator.classList.remove('active');
+            }, 400);
+        });
+
+        // Reload function
+        function reloadApp() {
+            frame.src = frame.src;
+        }
+
+        // Keyboard shortcut for reload
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                reloadApp();
+            }
+        });
+
+        // Auto-scale based on window size
+        function updateScale() {
+            const wrapper = document.getElementById('simulator-wrapper');
+            const containerWidth = window.innerWidth - 40; // padding
+            const deviceWidth = 1280 + 70; // frame + bezel
+            
+            if (containerWidth < deviceWidth) {
+                const scale = containerWidth / deviceWidth;
+                wrapper.style.transform = `scale(${scale})`;
+            } else {
+                wrapper.style.transform = 'scale(1)';
+            }
+        }
+
+        window.addEventListener('resize', updateScale);
+        updateScale();
+
+        console.log('🖥️ Touchscreen Simulator Ready!');
+        console.log('📐 Resolution: 1280x800 (10.1" display)');
+        console.log('⌨️ Press Ctrl+R to reload the app');
+    </script>
+</body>
+</html>

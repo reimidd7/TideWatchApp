@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TideWatch Touchscreen Simulator - 1280x800</title>
+    <title>TideWatch Touchscreen Simulator - 1024x600</title>
     <style>
         * {
             margin: 0;
@@ -84,8 +84,8 @@
         }
 
         .screen {
-            width: 1280px;
-            height: 800px;
+            width: 1024px;
+            height: 600px;
             background: #fff;
             border: none;
             display: block;
@@ -154,25 +154,25 @@
         }
 
         /* Responsive scaling for smaller screens */
-        @media (max-width: 1400px) {
+        @media (max-width: 1150px) {
             .simulator-wrapper {
                 transform: scale(0.9);
             }
         }
 
-        @media (max-width: 1280px) {
+        @media (max-width: 1024px) {
             .simulator-wrapper {
                 transform: scale(0.8);
             }
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 900px) {
             .simulator-wrapper {
                 transform: scale(0.7);
             }
         }
 
-        @media (max-width: 950px) {
+        @media (max-width: 780px) {
             .simulator-wrapper {
                 transform: scale(0.6);
             }
@@ -209,7 +209,7 @@
             <div class="info">
                 <div class="info-item">
                     <span class="info-label">Resolution</span>
-                    <span class="info-value">1280 × 800</span>
+                    <span class="info-value">1024 × 600</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Screen Size</span>
@@ -217,7 +217,7 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">Aspect Ratio</span>
-                    <span class="info-value">16:10</span>
+                    <span class="info-value">128:75</span>
                 </div>
             </div>
 
@@ -278,8 +278,8 @@
         // Auto-scale based on window size
         function updateScale() {
             const wrapper = document.getElementById('simulator-wrapper');
-            const containerWidth = window.innerWidth - 40; // padding
-            const deviceWidth = 1280 + 70; // frame + bezel
+            const containerWidth = window.innerWidth - 40;
+            const deviceWidth = 1024 + 70; // frame + bezel
             
             if (containerWidth < deviceWidth) {
                 const scale = containerWidth / deviceWidth;
@@ -293,7 +293,7 @@
         updateScale();
 
         console.log('🖥️ Touchscreen Simulator Ready!');
-        console.log('📐 Resolution: 1280x800 (10.1" display)');
+        console.log('📐 Resolution: 1024x600 (10.1" display)');
         console.log('⌨️ Press Ctrl+R to reload the app');
     </script>
 </body>

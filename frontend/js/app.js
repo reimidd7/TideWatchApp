@@ -55,10 +55,18 @@ function setPlaceholders() {
     document.getElementById('current-height').textContent = '--.- ft';
     document.getElementById('next-high').textContent = '--:--';
     document.getElementById('next-low').textContent = '--:--';
-    document.getElementById('high-time').textContent = '--:--';
-    document.getElementById('low-time').textContent = '--:--';
-    document.getElementById('tide-direction').textContent = '--';
-    document.getElementById('tide-status').textContent = '';
+    
+    // Dial time displays (new)
+    const highTimeDisplay = document.getElementById('high-time-display');
+    const lowTimeDisplay = document.getElementById('low-time-display');
+    if (highTimeDisplay) highTimeDisplay.textContent = '--:--';
+    if (lowTimeDisplay) lowTimeDisplay.textContent = '--:--';
+    
+    // Center dial values (new)
+    const todayHigh = document.getElementById('today-high');
+    const todayLow = document.getElementById('today-low');
+    if (todayHigh) todayHigh.textContent = '--.-';
+    if (todayLow) todayLow.textContent = '--.-';
     
     // Weather placeholders
     document.getElementById('weather-temp').textContent = '--°F';
@@ -227,10 +235,18 @@ function setTidePlaceholders() {
     document.getElementById('current-height').textContent = '--.- ft';
     document.getElementById('next-high').textContent = '--:--';
     document.getElementById('next-low').textContent = '--:--';
-    document.getElementById('high-time').textContent = '--:--';
-    document.getElementById('low-time').textContent = '--:--';
-    document.getElementById('tide-direction').textContent = '--';
-    document.getElementById('tide-status').textContent = '';
+    
+    // New dial time displays
+    const highTimeDisplay = document.getElementById('high-time-display');
+    const lowTimeDisplay = document.getElementById('low-time-display');
+    if (highTimeDisplay) highTimeDisplay.textContent = '--:--';
+    if (lowTimeDisplay) lowTimeDisplay.textContent = '--:--';
+    
+    // Reset center dial display
+    const todayHigh = document.getElementById('today-high');
+    const todayLow = document.getElementById('today-low');
+    if (todayHigh) todayHigh.textContent = '--.-';
+    if (todayLow) todayLow.textContent = '--.-';
     
     // Clear chart
     const canvas = document.getElementById('tide-chart');
@@ -265,26 +281,31 @@ function displayTideData(tideData) {
     
     // Next high tide
     const nextHighElement = document.getElementById('next-high');
-    const highTimeElement = document.getElementById('high-time');
+    const highTimeDisplay = document.getElementById('high-time-display');
     if (tideData.next_high) {
         const highTime = tideData.next_high.time_12hr || formatTime(tideData.next_high.time);
         if (nextHighElement) nextHighElement.textContent = highTime;
-        if (highTimeElement) highTimeElement.textContent = highTime;
+        if (highTimeDisplay) highTimeDisplay.textContent = highTime;
     } else {
         if (nextHighElement) nextHighElement.textContent = '--:--';
-        if (highTimeElement) highTimeElement.textContent = '--:--';
+        if (highTimeDisplay) highTimeDisplay.textContent = '--:--';
     }
     
     // Next low tide
     const nextLowElement = document.getElementById('next-low');
-    const lowTimeElement = document.getElementById('low-time');
+    const lowTimeDisplay = document.getElementById('low-time-display');
     if (tideData.next_low) {
         const lowTime = tideData.next_low.time_12hr || formatTime(tideData.next_low.time);
         if (nextLowElement) nextLowElement.textContent = lowTime;
-        if (lowTimeElement) lowTimeElement.textContent = lowTime;
+        if (lowTimeDisplay) lowTimeDisplay.textContent = lowTime;
     } else {
         if (nextLowElement) nextLowElement.textContent = '--:--';
-        if (lowTimeElement) lowTimeElement.textContent = '--:--';
+        if (lowTimeDisplay) lowTimeDisplay.textContent = '--:--';
+    }
+    
+    // Display today's high/low in the dial center
+    if (tideData.predictions && tideData.predictions.length > 0) {
+        displayTodaysHighLow(tideData.predictions);
     }
     
     // Tide status (rising/falling) and dial
@@ -295,15 +316,14 @@ function displayTideData(tideData) {
         );
     } else {
         // Reset dial if no status
-        document.getElementById('tide-direction').textContent = '--';
-        document.getElementById('tide-status').textContent = '';
+        const arc = document.getElementById('tide-arc');
+        if (arc) arc.setAttribute('d', '');
     }
     
     // Create tide chart with real data
     if (tideData.predictions && tideData.predictions.length > 0) {
         createTideChart(tideData.predictions, tideData.current);
     } else {
-        // Clear chart if no predictions
         const canvas = document.getElementById('tide-chart');
         if (canvas) {
             const ctx = canvas.getContext('2d');
@@ -364,15 +384,13 @@ function getCSSVar(varName) {
 function updateTideDial(percentage, isRising) {
     const svg = document.querySelector('.tide-dial');
     const arc = document.getElementById('tide-arc');
-    const directionText = document.getElementById('tide-direction');
-    const statusText = document.getElementById('tide-status');
     
-    // Calculate arc path
-    const centerX = 100;
-    const centerY = 100;
+    // Calculate arc path (dimensions: 240x240, radius 80)
+    const centerX = 120;
+    const centerY = 120;
     const radius = 80;
     
-    // Start from bottom (270 degrees) and go clockwise
+    // Start from top (270 degrees) and go clockwise
     const startAngle = 270;
     const endAngle = startAngle + (percentage * 360);
     
@@ -394,16 +412,7 @@ function updateTideDial(percentage, isRising) {
     const lowTideColor = getCSSVar('--color-low-tide');
     arc.setAttribute('stroke', isRising ? highTideColor : lowTideColor);
     
-    // Update text
-    if (directionText && statusText) {
-        if (isRising) {
-            directionText.textContent = 'Rising';
-            statusText.textContent = '↑';
-        } else {
-            directionText.textContent = 'Falling';
-            statusText.textContent = '↓';
-        }
-    }
+    // Note: Removed pointer rotation - we now show today's high/low in center instead
 }
 
 // Create tide chart using real NOAA data
@@ -581,6 +590,56 @@ function createTideTable(predictions) {
     
     html += '</tbody></table>';
     tableDiv.innerHTML = html;
+}
+
+function displayTodaysHighLow(predictions) {
+    /**
+     * Extract and display today's highest high and lowest low tide
+     */
+    if (!predictions || predictions.length === 0) {
+        document.getElementById('today-high').textContent = '--.-';
+        document.getElementById('today-low').textContent = '--.-';
+        return;
+    }
+    
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+    
+    // Filter today's predictions
+    const todaysPredictions = predictions.filter(pred => {
+        const predTime = new Date(pred.time);
+        return predTime >= todayStart && predTime < todayEnd;
+    });
+    
+    if (todaysPredictions.length === 0) {
+        document.getElementById('today-high').textContent = '--.-';
+        document.getElementById('today-low').textContent = '--.-';
+        return;
+    }
+    
+    // Find highest high and lowest low
+    const highs = todaysPredictions.filter(p => p.type === 'H');
+    const lows = todaysPredictions.filter(p => p.type === 'L');
+    
+    let highestHigh = '--.-';
+    let lowestLow = '--.-';
+    
+    if (highs.length > 0) {
+        const maxHigh = Math.max(...highs.map(h => h.height));
+        highestHigh = maxHigh.toFixed(1);
+    }
+    
+    if (lows.length > 0) {
+        const minLow = Math.min(...lows.map(l => l.height));
+        lowestLow = minLow.toFixed(1);
+    }
+    
+    document.getElementById('today-high').textContent = highestHigh;
+    document.getElementById('today-low').textContent = lowestLow;
+    
+    console.log(`Today's tides - High: ${highestHigh}ft, Low: ${lowestLow}ft`);
 }
 
 // Initialize swipe functionality

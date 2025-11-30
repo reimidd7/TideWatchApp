@@ -69,12 +69,35 @@
                                 <text x="224" y="123" text-anchor="middle" font-size="11" class="tide-side-label falling">falling</text>
                             </svg>
                             
-                            <!-- Center Display - Today's High/Low -->
-                            <div class="tide-center-display">
-                                <div class="tide-center-label">Today</div>
-                                <div class="tide-center-values">
-                                    <div class="tide-high-value">High: <span id="today-high">--.-</span>ft</div>
-                                    <div class="tide-low-value">Low: <span id="today-low">--.-</span>ft</div>
+                            <!-- Swipeable Center Display -->
+                            <div class="tide-center-swipe-container" id="dial-swipe-container">
+                                <div class="dial-swipe-wrapper" id="dial-swipe-wrapper">
+                                    
+                                    <!-- View 1: Today's High/Low -->
+                                    <div class="dial-swipe-panel active">
+                                        <div class="tide-center-label">Today</div>
+                                        <div class="tide-center-values">
+                                            <div class="tide-high-value">High: <span id="today-high">--.-</span>ft</div>
+                                            <div class="tide-low-value">Low: <span id="today-low">--.-</span>ft</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- View 2: Next Tide with Countdown -->
+                                    <div class="dial-swipe-panel">
+                                        <div class="tide-center-label">Next Tide</div>
+                                        <div class="next-tide-info">
+                                            <div class="next-tide-type" id="next-tide-type">Low</div>
+                                            <div class="next-tide-height" id="next-tide-height">--.- ft</div>
+                                            <div class="next-tide-countdown" id="next-tide-countdown">in --h --m</div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                
+                                <!-- Dial Swipe Indicators -->
+                                <div class="dial-swipe-indicators">
+                                    <span class="dial-indicator active" data-dial-index="0"></span>
+                                    <span class="dial-indicator" data-dial-index="1"></span>
                                 </div>
                             </div>
                             

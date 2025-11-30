@@ -15,6 +15,14 @@ const state = {
     theme: 'dark' // default theme
 };
 
+// State for dial swipe
+const dialSwipeState = {
+    currentView: 0,
+    startX: 0,
+    currentX: 0,
+    isDragging: false
+};
+
 // Theme Toggle
 function initTheme() {
     // Check if user has a saved preference
@@ -56,17 +64,25 @@ function setPlaceholders() {
     document.getElementById('next-high').textContent = '--:--';
     document.getElementById('next-low').textContent = '--:--';
     
-    // Dial time displays (new)
+    // Dial time displays
     const highTimeDisplay = document.getElementById('high-time-display');
     const lowTimeDisplay = document.getElementById('low-time-display');
     if (highTimeDisplay) highTimeDisplay.textContent = '--:--';
     if (lowTimeDisplay) lowTimeDisplay.textContent = '--:--';
     
-    // Center dial values (new)
+    // Center dial values
     const todayHigh = document.getElementById('today-high');
     const todayLow = document.getElementById('today-low');
     if (todayHigh) todayHigh.textContent = '--.-';
     if (todayLow) todayLow.textContent = '--.-';
+    
+    // Next tide display
+    const nextTideType = document.getElementById('next-tide-type');
+    const nextTideHeight = document.getElementById('next-tide-height');
+    const nextTideCountdown = document.getElementById('next-tide-countdown');
+    if (nextTideType) nextTideType.textContent = '--';
+    if (nextTideHeight) nextTideHeight.textContent = '--.- ft';
+    if (nextTideCountdown) nextTideCountdown.textContent = 'in --h --m';
     
     // Weather placeholders
     document.getElementById('weather-temp').textContent = '--°F';
@@ -114,6 +130,12 @@ async function initApp() {
     
     // Set up swipe functionality
     initSwipe();
+    
+    // Set up dial swipe functionality
+    initDialSwipe();
+    
+    // Start countdown timer
+    startCountdownTimer();
 
     // Load weather data
     await loadWeatherData();
@@ -236,7 +258,7 @@ function setTidePlaceholders() {
     document.getElementById('next-high').textContent = '--:--';
     document.getElementById('next-low').textContent = '--:--';
     
-    // New dial time displays
+    // Dial time displays
     const highTimeDisplay = document.getElementById('high-time-display');
     const lowTimeDisplay = document.getElementById('low-time-display');
     if (highTimeDisplay) highTimeDisplay.textContent = '--:--';
@@ -247,6 +269,14 @@ function setTidePlaceholders() {
     const todayLow = document.getElementById('today-low');
     if (todayHigh) todayHigh.textContent = '--.-';
     if (todayLow) todayLow.textContent = '--.-';
+    
+    // Reset next tide display
+    const nextTideType = document.getElementById('next-tide-type');
+    const nextTideHeight = document.getElementById('next-tide-height');
+    const nextTideCountdown = document.getElementById('next-tide-countdown');
+    if (nextTideType) nextTideType.textContent = '--';
+    if (nextTideHeight) nextTideHeight.textContent = '--.- ft';
+    if (nextTideCountdown) nextTideCountdown.textContent = 'in --h --m';
     
     // Clear chart
     const canvas = document.getElementById('tide-chart');
@@ -341,6 +371,9 @@ function displayTideData(tideData) {
         }
     }
     
+    // Update next tide display with countdown
+    updateNextTideDisplay(tideData);
+    
     console.log('✅ Tide data displayed');
 }
 
@@ -411,8 +444,6 @@ function updateTideDial(percentage, isRising) {
     const highTideColor = getCSSVar('--color-high-tide');
     const lowTideColor = getCSSVar('--color-low-tide');
     arc.setAttribute('stroke', isRising ? highTideColor : lowTideColor);
-    
-    // Note: Removed pointer rotation - we now show today's high/low in center instead
 }
 
 // Create tide chart using real NOAA data
@@ -719,6 +750,189 @@ function switchView(index) {
     }
 }
 
+// ========================================
+// DIAL SWIPE FUNCTIONALITY
+// ========================================
+
+// Initialize dial swipe functionality
+function initDialSwipe() {
+    const container = document.getElementById('dial-swipe-container');
+    const indicators = document.querySelectorAll('.dial-indicator');
+    
+    if (!container) {
+        console.warn('Dial swipe container not found');
+        return;
+    }
+    
+    // Click indicators to switch views
+    indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            switchDialView(index);
+        });
+    });
+    
+    // Touch/swipe support
+    container.addEventListener('mousedown', (e) => {
+        dialSwipeState.startX = e.clientX;
+        dialSwipeState.isDragging = true;
+        e.preventDefault();
+    });
+    
+    container.addEventListener('touchstart', (e) => {
+        dialSwipeState.startX = e.touches[0].clientX;
+        dialSwipeState.isDragging = true;
+    }, { passive: true });
+    
+    container.addEventListener('mousemove', (e) => {
+        if (!dialSwipeState.isDragging) return;
+        dialSwipeState.currentX = e.clientX;
+    });
+    
+    container.addEventListener('touchmove', (e) => {
+        if (!dialSwipeState.isDragging) return;
+        dialSwipeState.currentX = e.touches[0].clientX;
+    }, { passive: true });
+    
+    const endDrag = () => {
+        if (!dialSwipeState.isDragging) return;
+        dialSwipeState.isDragging = false;
+        
+        const diff = dialSwipeState.startX - dialSwipeState.currentX;
+        if (Math.abs(diff) > 30) {
+            if (diff > 0 && dialSwipeState.currentView < 1) {
+                switchDialView(dialSwipeState.currentView + 1);
+            } else if (diff < 0 && dialSwipeState.currentView > 0) {
+                switchDialView(dialSwipeState.currentView - 1);
+            }
+        }
+    };
+    
+    container.addEventListener('mouseup', endDrag);
+    container.addEventListener('touchend', endDrag);
+    container.addEventListener('mouseleave', endDrag);
+    
+    console.log('✅ Dial swipe initialized');
+}
+
+// Switch between dial views
+function switchDialView(index) {
+    const wrapper = document.getElementById('dial-swipe-wrapper');
+    const panels = document.querySelectorAll('.dial-swipe-panel');
+    const indicators = document.querySelectorAll('.dial-indicator');
+    
+    if (!wrapper) return;
+    
+    // Update transform
+    wrapper.style.transform = `translateX(-${index * 100}%)`;
+    
+    // Update active states
+    panels.forEach(panel => panel.classList.remove('active'));
+    indicators.forEach(ind => ind.classList.remove('active'));
+    
+    if (panels[index]) panels[index].classList.add('active');
+    if (indicators[index]) indicators[index].classList.add('active');
+    
+    dialSwipeState.currentView = index;
+    
+    console.log(`🔄 Dial view: ${index === 0 ? "Today's High/Low" : "Next Tide"}`);
+}
+
+// Update next tide display with countdown
+function updateNextTideDisplay(tideData) {
+    if (!tideData) return;
+    
+    const typeElement = document.getElementById('next-tide-type');
+    const heightElement = document.getElementById('next-tide-height');
+    const countdownElement = document.getElementById('next-tide-countdown');
+    
+    if (!typeElement || !heightElement || !countdownElement) return;
+    
+    // Determine next tide (high or low)
+    let nextTide = null;
+    let tideType = '';
+    
+    // Use tide status to determine if rising (next is high) or falling (next is low)
+    if (tideData.status && tideData.status.has_predictions !== false) {
+        if (tideData.status.is_rising && tideData.next_high) {
+            nextTide = tideData.next_high;
+            tideType = 'High';
+            typeElement.className = 'next-tide-type high';
+        } else if (!tideData.status.is_rising && tideData.next_low) {
+            nextTide = tideData.next_low;
+            tideType = 'Low';
+            typeElement.className = 'next-tide-type low';
+        }
+    }
+    
+    // Fallback: use whichever is sooner
+    if (!nextTide && tideData.next_high && tideData.next_low) {
+        const now = new Date();
+        const highTime = new Date(tideData.next_high.time);
+        const lowTime = new Date(tideData.next_low.time);
+        
+        if (highTime < lowTime) {
+            nextTide = tideData.next_high;
+            tideType = 'High';
+            typeElement.className = 'next-tide-type high';
+        } else {
+            nextTide = tideData.next_low;
+            tideType = 'Low';
+            typeElement.className = 'next-tide-type low';
+        }
+    }
+    
+    // Update display
+    if (nextTide) {
+        typeElement.textContent = tideType;
+        heightElement.textContent = `${nextTide.height} ft`;
+        updateCountdown(nextTide.time);
+    } else {
+        typeElement.textContent = '--';
+        heightElement.textContent = '--.- ft';
+        countdownElement.textContent = 'in --h --m';
+    }
+}
+
+// Update countdown timer
+function updateCountdown(targetTimeString) {
+    const countdownElement = document.getElementById('next-tide-countdown');
+    if (!countdownElement || !targetTimeString) return;
+    
+    const now = new Date();
+    const targetTime = new Date(targetTimeString);
+    
+    const diff = targetTime - now;
+    
+    if (diff <= 0) {
+        countdownElement.textContent = 'now';
+        return;
+    }
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+        countdownElement.textContent = `in ${hours}h ${minutes}m`;
+    } else {
+        countdownElement.textContent = `in ${minutes}m`;
+    }
+}
+
+// Start countdown update interval
+function startCountdownTimer() {
+    // Update countdown every 30 seconds
+    setInterval(() => {
+        if (state.tideData) {
+            updateNextTideDisplay(state.tideData);
+        }
+    }, 30000);
+    
+    console.log('⏱️ Countdown timer started');
+}
+
+// ========================================
+
 // Update last update timestamp
 function updateLastUpdateTime() {
     state.lastUpdate = new Date();
@@ -877,6 +1091,8 @@ window.TideWatch = {
     updateTideDial,
     createTideChart,
     switchView,
+    switchDialView,
     toggleTheme,
-    state
+    state,
+    dialSwipeState
 };

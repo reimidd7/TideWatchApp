@@ -77,11 +77,12 @@ body {
 }
 
 .location-title {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 1.0rem;
+    font-weight: 625;
     color: var(--color-accent);
     text-align: center;
-    margin-bottom: 2px;
+    margin-top: 6%;
+    margin-bottom: 3px;
     transition: color 0.3s ease;
 }
 
@@ -95,14 +96,14 @@ body {
 }
 
 .current-height .label {
-    font-size: 0.65rem;
+    font-size: 0.90rem;
     color: var(--color-text-dim);
-    margin-bottom: 2px;
+    margin-bottom: 3px;
     transition: color 0.3s ease;
 }
 
 .current-height .value {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     font-weight: bold;
     color: var(--color-accent);
     transition: color 0.3s ease;
@@ -125,13 +126,13 @@ body {
 }
 
 .tide-time .label {
-    font-size: 0.7rem;
+    font-size: 0.9rem;
     color: var(--color-text-dim);
     transition: color 0.3s ease;
 }
 
 .tide-time .value {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: bold;
     color: var(--color-text);
     transition: color 0.3s ease;
@@ -152,7 +153,7 @@ body {
     display: flex;
     gap: 8px;
     align-items: stretch;
-    height: 235px;
+    height: 280px;
     flex-shrink: 0;
 }
 
@@ -166,7 +167,7 @@ body {
 
 .tide-dial-section .tide-dial-card {
     width: auto;
-    min-width: 170px;
+    min-width: 220px;
 }
 
 .info-card {
@@ -195,12 +196,12 @@ body {
 /* Tide Dial */
 .tide-dial-card {
     position: relative;
-    min-height: 235px !important;
+    min-height: 280px !important;
 }
 
 .tide-dial-container {
     width: 100%;
-    max-width: 220px;
+    max-width: 270px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -215,7 +216,7 @@ body {
 
 .tide-label-high {
     position: absolute;
-    top: 2%;
+    top: 1%;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
@@ -224,7 +225,7 @@ body {
 
 .tide-label-low {
     position: absolute;
-    bottom: 2%;
+    bottom: 1%;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
@@ -232,7 +233,7 @@ body {
 }
 
 .tide-extreme-label {
-    font-size: 0.6rem;
+    font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 1px;
     color: var(--color-text-dim);
@@ -242,7 +243,7 @@ body {
 }
 
 .tide-extreme-time {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--color-text);
     margin: 0;
@@ -269,6 +270,7 @@ body {
     fill: var(--color-accent);
     font-weight: 500;
     letter-spacing: 0.5px;
+    font-size: 8px;  
     transition: fill 0.3s ease;
 }
 
@@ -282,8 +284,8 @@ body {
     top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80%;
-    height: 100px;
+    width: 75%;
+    height: 110px;
     overflow: hidden;
     cursor: grab;
     user-select: none;
@@ -316,9 +318,9 @@ body {
 }
 
 .tide-center-label {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     color: var(--color-text-dim);
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     font-weight: 500;
     text-transform: capitalize;
     transition: color 0.3s ease;
@@ -328,10 +330,10 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    font-size: 0.75rem;
+    gap: 3px;
+    font-size: 1rem;
     color: var(--color-text);
-    font-weight: 600;
+    font-weight: 500;
     transition: color 0.3s ease;
 }
 
@@ -347,7 +349,7 @@ body {
 
 #today-high, #today-low {
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
 }
 
 /* Next Tide View */
@@ -359,7 +361,7 @@ body {
 }
 
 .next-tide-type {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--color-accent);
     text-transform: uppercase;
@@ -376,16 +378,16 @@ body {
 }
 
 .next-tide-height {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: var(--color-text);
     transition: color 0.3s ease;
 }
 
 .next-tide-countdown {
-    font-size: 0.75rem;
+    font-size: 1rem;
     color: var(--color-text-dim);
-    font-weight: 500;
+    font-weight: 550;
     transition: color 0.3s ease;
 }
 
@@ -433,6 +435,8 @@ body {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+    min-height: unset;  /* Remove inherited min-height from .info-card */
+    height: 80%;  /* Fit container height */
 }
 
 /* Wind Display */
@@ -444,12 +448,12 @@ body {
 }
 
 .wind-arrow {
-    font-size: 2rem;
+    font-size: 3rem;
     transition: transform 0.5s ease;
 }
 
 .wind-speed {
-    font-size: 1rem;
+    font-size: 2rem;
     font-weight: bold;
     color: var(--color-accent);
     transition: color 0.3s ease;
@@ -460,15 +464,15 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
 }
 
 .weather-icon {
-    font-size: 2rem;
+    font-size: 3rem;
 }
 
 .weather-temp {
-    font-size: 1.3rem;
+    font-size: 2rem;
     font-weight: bold;
     color: var(--color-text);
     transition: color 0.3s ease;
@@ -479,48 +483,50 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
 }
 
 .visibility-icon {
-    font-size: 2rem;
+    font-size: 3rem;
 }
 
 .visibility-value {
-    font-size: 1rem;
+    font-size: 2rem;
     font-weight: bold;
     color: var(--color-text);
     transition: color 0.3s ease;
 }
 
-/* Astronomy Section */
+/* Astronomy Section - reduce size and remove flex: 1 */
 .astronomy-section {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    flex: 1;
+    gap: 6px;
+    height: 80px;  /* Fixed small height instead of flex: 1 */
 }
 
 .astro-card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    padding: 6px 10px;
+    padding: 4px 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    min-height: unset;  /* Remove inherited min-height from .info-card */
+    height: 100%;  /* Fit container height */
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .moon-phase, .sun-icon {
-    font-size: 2.2rem;
+    font-size: 2.5rem;  /* Reduced from 2.2rem */
     flex-shrink: 0;
 }
 
 .astro-times {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;  /* Reduced from 3px */
     flex: 1;
 }
 
@@ -532,17 +538,16 @@ body {
 
 .astro-time .label {
     color: var(--color-text-dim);
-    font-size: 0.65rem;
+    font-size: 0.75rem;  /* Reduced from 0.65rem */
     transition: color 0.3s ease;
 }
 
 .astro-time .value {
     color: var(--color-text);
     font-weight: bold;
-    font-size: 0.75rem;
+    font-size: 0.85rem;  /* Reduced from 0.75rem */
     transition: color 0.3s ease;
 }
-
 /* Tide Chart Section - Swipeable */
 .tide-chart-section {
     flex: 1;
@@ -637,37 +642,38 @@ body {
     transition: color 0.3s ease;
 }
 
-/* Enhanced Tide Table Styles - Add to styles.css */
+/* Simplified 5-Day Tide Table Styles - Replace the enhanced-tide-table styles */
 
 .enhanced-tide-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
 }
 
 .enhanced-tide-table thead th {
     background: var(--color-bg);
     color: var(--color-accent);
-    font-weight: 600;
+    font-weight: 700;
     text-align: center;
-    padding: 6px 4px;
+    padding: 8px 6px;
     border-bottom: 2px solid var(--color-border);
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     position: sticky;
     top: 0;
     z-index: 10;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .enhanced-tide-table thead th sup {
-    font-size: 0.5rem;
+    font-size: 0.55rem;
 }
 
 .enhanced-tide-table tbody tr {
     border-bottom: 1px solid var(--color-border);
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.3s ease;
 }
 
 .enhanced-tide-table tbody tr:hover {
@@ -675,104 +681,84 @@ body {
 }
 
 .enhanced-tide-table td {
-    padding: 6px 4px;
+    padding: 8px 6px;
     text-align: center;
     vertical-align: middle;
     border-right: 1px solid var(--color-border);
-    transition: color 0.3s ease;
+    transition: border-color 0.3s ease;
 }
 
 .enhanced-tide-table td:last-child {
     border-right: none;
 }
 
-/* Day Column */
-.day-cell {
-    min-width: 45px;
-    padding: 8px 6px !important;
+/* Date Column */
+.date-col {
+    min-width: 60px;
 }
 
-.day-num {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: var(--color-text);
-    line-height: 1;
-    margin-bottom: 2px;
+.date-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 5px !important;
+    text-align: center !important;
+}
+
+.date-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .day-name {
-    font-size: 0.65rem;
-    color: var(--color-text-dim);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text);
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    transition: color 0.3s ease;
 }
 
-/* Moon Column */
-.moon-cell {
-    min-width: 50px;
-}
-
-.moon-icon {
-    font-size: 1.5rem;
-    line-height: 1;
-    margin-bottom: 2px;
-}
-
-.moon-percent {
-    font-size: 0.65rem;
-    color: var(--color-text);
-    font-weight: 600;
-}
-
-/* Sun Column */
-.sun-cell {
-    min-width: 65px;
-    padding: 4px !important;
-}
-
-.sun-time {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    padding: 2px 0;
-    font-size: 0.65rem;
-    color: var(--color-text);
-}
-
-.sun-time .sun-icon {
-    font-size: 0.6rem;
-    color: var(--color-accent);
+.month-day {
+    font-size: 0.7rem;
+    color: var(--color-text-dim);
+    transition: color 0.3s ease;
 }
 
 /* Tide Columns */
 .tide-col {
-    min-width: 75px;
+    min-width: 70px;
 }
 
 .tide-cell {
-    min-width: 75px;
-    padding: 6px 4px !important;
+    min-width: 70px;
+    padding: 6px 6px !important;
 }
 
 .tide-time {
-    font-size: 0.7rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    margin-bottom: 2px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 3px;
     line-height: 1.2;
+    gap: 8px;
+    transition: color 0.3s ease;
 }
 
 .tide-height {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    margin-bottom: 3px;
+    line-height: 1.2;
+    transition: color 0.3s ease;
 }
 
 .tide-icon {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
 }
 
 /* High Tide Styling */
@@ -804,21 +790,28 @@ body {
 /* Empty cells */
 .tide-cell.empty {
     color: var(--color-text-dim);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+    opacity: 0.5;
 }
 
-/* Responsive adjustments for smaller text on touchscreen */
+/* Responsive adjustments */
 @media (max-width: 1024px) {
     .enhanced-tide-table {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
     }
     
     .tide-time {
-        font-size: 0.65rem;
+        font-size: 0.8rem;
     }
     
     .tide-height {
-        font-size: 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    .day-badge {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
     }
 }
 

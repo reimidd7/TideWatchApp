@@ -10,6 +10,7 @@ const state = {
     tideData: null,
     weatherData: null,
     astronomyData: null,
+    multiDayAstronomy: null,
     lastUpdate: null,
     isConnected: false,
     theme: 'dark' // default theme
@@ -61,8 +62,8 @@ function updateThemeIcon() {
 function setPlaceholders() {
     // Tide placeholders
     document.getElementById('current-height').textContent = '--.- ft';
-    document.getElementById('next-high').textContent = '--:--';
-    document.getElementById('next-low').textContent = '--:--';
+    document.getElementById('next-high').textContent = ' --:--';
+    document.getElementById('next-low').textContent = ' --:--';
     
     // Dial time displays
     const highTimeDisplay = document.getElementById('high-time-display');
@@ -152,8 +153,12 @@ async function initApp() {
     // Refresh astronomy data every hour
     setInterval(loadAstronomyData, 3600000);
     
+    // Schedule midnight refresh for tide table
+    scheduleMidnightRefresh();  // ADD THIS LINE
+    
     console.log('✅ TideWatch ready!');
 }
+
 
 // Update clock display
 function updateClock() {
@@ -255,8 +260,8 @@ async function loadTideData() {
 // Set tide-related placeholders
 function setTidePlaceholders() {
     document.getElementById('current-height').textContent = '--.- ft';
-    document.getElementById('next-high').textContent = '--:--';
-    document.getElementById('next-low').textContent = '--:--';
+    document.getElementById('next-high').textContent = ' --:--';
+    document.getElementById('next-low').textContent = ' --:--';
     
     // Dial time displays
     const highTimeDisplay = document.getElementById('high-time-display');
@@ -317,8 +322,8 @@ function displayTideData(tideData) {
         if (nextHighElement) nextHighElement.textContent = highTime;
         if (highTimeDisplay) highTimeDisplay.textContent = highTime;
     } else {
-        if (nextHighElement) nextHighElement.textContent = '--:--';
-        if (highTimeDisplay) highTimeDisplay.textContent = '--:--';
+        if (nextHighElement) nextHighElement.textContent = ' --:--';
+        if (highTimeDisplay) highTimeDisplay.textContent = ' --:--';
     }
     
     // Next low tide
@@ -329,8 +334,8 @@ function displayTideData(tideData) {
         if (nextLowElement) nextLowElement.textContent = lowTime;
         if (lowTimeDisplay) lowTimeDisplay.textContent = lowTime;
     } else {
-        if (nextLowElement) nextLowElement.textContent = '--:--';
-        if (lowTimeDisplay) lowTimeDisplay.textContent = '--:--';
+        if (nextLowElement) nextLowElement.textContent = ' --:--';
+        if (lowTimeDisplay) lowTimeDisplay.textContent = ' --:--';
     }
     
     // Display today's high/low in the dial center
@@ -414,37 +419,67 @@ function getCSSVar(varName) {
 }
 
 // Draw tide dial arc
+// Replace the existing updateTideDial function in app.js with this:
+
 function updateTideDial(percentage, isRising) {
-    const svg = document.querySelector('.tide-dial');
     const arc = document.getElementById('tide-arc');
+    if (!arc) return;
     
-    // Calculate arc path (dimensions: 240x240, radius 80)
+    // IMPORTANT: These values must match the background ring (tide-ring-bg) in the SVG
     const centerX = 120;
     const centerY = 120;
-    const radius = 80;
+    const radius = 78;
     
-    // Start from top (270 degrees) and go clockwise
-    const startAngle = 270;
-    const endAngle = startAngle + (percentage * 360);
+    // Don't draw if percentage is essentially 0
+    if (percentage < 0.01) {
+        arc.setAttribute('d', '');
+        return;
+    }
     
-    const startRad = (startAngle * Math.PI) / 180;
-    const endRad = (endAngle * Math.PI) / 180;
+    // Clamp percentage to valid range
+    percentage = Math.max(0, Math.min(1, percentage));
     
-    const x1 = centerX + radius * Math.cos(startRad);
-    const y1 = centerY + radius * Math.sin(startRad);
-    const x2 = centerX + radius * Math.cos(endRad);
-    const y2 = centerY + radius * Math.sin(endRad);
+    // Convert degrees to radians
+    const toRad = (deg) => (deg * Math.PI) / 180;
     
+    let startAngle, endAngle, sweepFlag;
+    
+    if (isRising) {
+        // RISING: Arc on LEFT side (bottom to top, counter-clockwise visually)
+        // In SVG coords: bottom=90°, top=270°, going counter-clockwise means sweep=0
+        startAngle = 90;   // Bottom of circle
+        endAngle = 90 - (percentage * 180);  // Toward top, going left (CCW)
+        sweepFlag = 0;  // Counter-clockwise
+        arc.setAttribute('stroke', 'url(#tideGradientRising)');
+    } else {
+        // FALLING: Arc on RIGHT side (top to bottom, clockwise visually)
+        // In SVG coords: top=270° (or -90°), bottom=90°, going clockwise means sweep=1
+        startAngle = -90;  // Top of circle (same as 270°)
+        endAngle = -90 + (percentage * 180);  // Toward bottom, going right (CW)
+        sweepFlag = 1;  // Clockwise
+        arc.setAttribute('stroke', 'url(#tideGradientFalling)');
+    }
+    
+    // Calculate start point
+    const x1 = centerX + radius * Math.cos(toRad(startAngle));
+    const y1 = centerY + radius * Math.sin(toRad(startAngle));
+    
+    // Calculate end point
+    const x2 = centerX + radius * Math.cos(toRad(endAngle));
+    const y2 = centerY + radius * Math.sin(toRad(endAngle));
+    
+    // Large arc flag: 1 if the arc spans more than 180°
     const largeArc = percentage > 0.5 ? 1 : 0;
     
-    const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
+    // Build SVG arc path
+    // M = move to start, A = arc (rx, ry, rotation, large-arc, sweep, end-x, end-y)
+    const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} ${sweepFlag} ${x2} ${y2}`;
+    
     arc.setAttribute('d', pathData);
     
-    // Set color based on rising/falling using CSS variables
-    const highTideColor = getCSSVar('--color-high-tide');
-    const lowTideColor = getCSSVar('--color-low-tide');
-    arc.setAttribute('stroke', isRising ? highTideColor : lowTideColor);
+    console.log(`Tide dial: ${isRising ? 'Rising' : 'Falling'} ${(percentage * 100).toFixed(1)}%`);
 }
+
 
 // Create tide chart using real NOAA data
 // REPLACE the existing createTideChart function in app.js with this complete version
@@ -679,12 +714,16 @@ function createTideTable(predictions) {
     const tableDiv = document.getElementById('tide-table');
     if (!tableDiv) return;
     
-    // Group predictions by day
+    // Group predictions by day (using local timezone, not UTC)
     const dayGroups = {};
     
     predictions.forEach(pred => {
         const predDate = new Date(pred.time);
-        const dateKey = predDate.toISOString().split('T')[0]; // YYYY-MM-DD
+        // Format date in local timezone (PST), not UTC
+        const year = predDate.getFullYear();
+        const month = String(predDate.getMonth() + 1).padStart(2, '0');
+        const day = String(predDate.getDate()).padStart(2, '0');
+        const dateKey = `${year}-${month}-${day}`;
         
         if (!dayGroups[dateKey]) {
             dayGroups[dateKey] = {
@@ -701,17 +740,12 @@ function createTideTable(predictions) {
         day.tides.sort((a, b) => new Date(a.time) - new Date(b.time));
     });
     
-    // Get astronomy data for moon phase and sun times
-    const astroData = state.astronomyData?.data || {};
-    
     // Build table HTML
     let html = `
         <table class="enhanced-tide-table">
             <thead>
                 <tr>
-                    <th class="day-col"></th>
-                    <th class="moon-col">🌙</th>
-                    <th class="sun-col">☀️</th>
+                    <th class="date-col">DATE</th>
                     <th class="tide-col">1<sup>st</sup> TIDE</th>
                     <th class="tide-col">2<sup>nd</sup> TIDE</th>
                     <th class="tide-col">3<sup>rd</sup> TIDE</th>
@@ -721,51 +755,25 @@ function createTideTable(predictions) {
             <tbody>
     `;
     
-    // Get sorted day keys (first 7 days)
-    const sortedDays = Object.keys(dayGroups).sort().slice(0, 7);
+    // Get sorted day keys (first 5 days only)
+    const sortedDays = Object.keys(dayGroups).sort().slice(0, 5);
     
     sortedDays.forEach((dateKey, index) => {
         const day = dayGroups[dateKey];
         const date = day.date;
         
-        // Format day info
-        const dayNum = index + 1;
+        // Format date display
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-        
-        // Moon phase (use current moon data for all days - could be enhanced)
-        const moonIllumination = astroData.moon_illumination || 50;
-        const moonEmoji = astroData.moon_emoji || '🌓';
-        
-        // Sun times (use current sun data - could be enhanced per day)
-        const sunrise = astroData.sunrise || '—';
-        const sunset = astroData.sunset || '—';
+        const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         
         html += `<tr>`;
         
-        // Day column
+        // Date column
         html += `
-            <td class="day-cell">
-                <div class="day-num">${dayNum}</div>
-                <div class="day-name">${dayName}</div>
-            </td>
-        `;
-        
-        // Moon column
-        html += `
-            <td class="moon-cell">
-                <div class="moon-icon">${moonEmoji}</div>
-                <div class="moon-percent">${moonIllumination}%</div>
-            </td>
-        `;
-        
-        // Sun column
-        html += `
-            <td class="sun-cell">
-                <div class="sun-time">
-                    <span class="sun-icon">▲</span> ${sunrise}
-                </div>
-                <div class="sun-time">
-                    <span class="sun-icon">▼</span> ${sunset}
+            <td class="date-cell">
+                <div class="date-info">
+                    <div class="day-name">${dayName}</div>
+                    <div class="month-day">${monthDay}</div>
                 </div>
             </td>
         `;
@@ -780,10 +788,9 @@ function createTideTable(predictions) {
                 
                 html += `
                     <td class="tide-cell ${tideClass}">
-                        <div class="tide-time">${tide.time_12hr || formatTime(tide.time)}</div>
-                        <div class="tide-height">
-                            <span class="tide-icon">${tideIcon}</span> ${tide.height} ft
-                        </div>
+                        <div class="tide-time"><span class="tide-icon">${tideIcon}</span> ${tide.height}ft ${tide.time_12hr || formatTime(tide.time)} </div>
+                    
+                       
                     </td>
                 `;
             } else {
@@ -796,14 +803,37 @@ function createTideTable(predictions) {
     
     html += `</tbody></table>`;
     tableDiv.innerHTML = html;
+    
+    console.log('✅ 5-day tide table created');
 }
+
+// Add this function to schedule midnight refresh
+function scheduleMidnightRefresh() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0); // Midnight
+    
+    const msUntilMidnight = tomorrow - now;
+    
+    console.log(`⏰ Next table refresh at midnight (in ${Math.round(msUntilMidnight / 1000 / 60)} minutes)`);
+    
+    setTimeout(() => {
+        console.log('🔄 Midnight refresh - reloading tide data');
+        loadTideData(); // This will recreate the table with fresh data
+        
+        // Schedule the next midnight refresh
+        scheduleMidnightRefresh();
+    }, msUntilMidnight);
+}
+
 function displayTodaysHighLow(predictions) {
     /**
      * Extract and display today's highest high and lowest low tide
      */
     if (!predictions || predictions.length === 0) {
-        document.getElementById('today-high').textContent = '--.-';
-        document.getElementById('today-low').textContent = '--.-';
+        document.getElementById('today-high').textContent = ' --.-';
+        document.getElementById('today-low').textContent = ' --.-';
         return;
     }
     
@@ -819,8 +849,8 @@ function displayTodaysHighLow(predictions) {
     });
     
     if (todaysPredictions.length === 0) {
-        document.getElementById('today-high').textContent = '--.-';
-        document.getElementById('today-low').textContent = '--.-';
+        document.getElementById('today-high').textContent = ' --.-';
+        document.getElementById('today-low').textContent = ' --.-';
         return;
     }
     
@@ -1210,6 +1240,32 @@ async function loadAstronomyData() {
         return null;
     }
 }
+
+async function loadMultiDayAstronomy(days = 5) {
+    try {
+        const response = await fetch(`${API_BASE}/api/astronomy/multi-day?days=${days}`);
+        const result = await response.json();
+        
+        if (result.status === 'ok') {
+            state.multiDayAstronomy = result.data;
+            console.log(`🌙 Multi-day astronomy loaded: ${result.days} days`);
+            
+            // Recreate table if we have tide data
+            if (state.tideData && state.tideData.predictions) {
+                createTideTable(state.tideData.predictions);
+            }
+            
+            return result.data;
+        } else {
+            console.error('Failed to load multi-day astronomy:', result.message);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error loading multi-day astronomy:', error);
+        return null;
+    }
+}
+
 
 // Set astronomy-related placeholders
 function setAstronomyPlaceholders() {

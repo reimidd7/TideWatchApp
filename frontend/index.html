@@ -26,11 +26,11 @@
             
             <div class="tide-times">
                 <div class="tide-time">
-                    <div class="label">Next Low</div>
+                    <div class="label">Next Low </div>
                     <div class="value" id="next-low">7:34 PM</div>
                 </div>
                 <div class="tide-time">
-                    <div class="label">Next High</div>
+                    <div class="label">Next High </div>
                     <div class="value" id="next-high">9:08 AM</div>
                 </div>
             </div>
@@ -52,21 +52,43 @@
                                 <div class="tide-extreme-time" id="high-time-display">--:--</div>
                             </div>
                             
+                            
                             <svg class="tide-dial" viewBox="0 0 240 240">
-                                <!-- Background gray ring -->
+                                <!-- Gradient Definitions -->
+                                <defs>
+                                    <!-- Gradient for falling tide (red at top to blue at bottom) -->
+                                    <linearGradient id="tideGradientFalling" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="#D95E5E" />
+                                        <stop offset="100%" stop-color="#33C7FF" />
+                                    </linearGradient>
+                                    
+                                    <!-- Gradient for rising tide (blue at bottom to red at top) -->
+                                    <linearGradient id="tideGradientRising" x1="0%" y1="100%" x2="0%" y2="0%">
+                                        <stop offset="0%" stop-color="#33C7FF" />
+                                        <stop offset="100%" stop-color="#D95E5E" />
+                                    </linearGradient>
+                                </defs>
+                                
+                                <!-- Background gray ring - THIS IS THE TRACK -->
                                 <circle cx="120" cy="120" r="80" fill="none" class="tide-ring-bg" stroke-width="14"/>
                                 
-                                <!-- Tide level arc (will be animated) -->
-                                <path id="tide-arc" d="" fill="none" stroke-width="16" stroke-linecap="round"/>
+                                <!-- High tide marker (top) -->
+                                <line x1="120" y1="33" x2="120" y2="47" stroke="#D95E5E" stroke-width="3" stroke-linecap="butt"/>
+
+                                <!-- Low tide marker (bottom) -->
+                                <line x1="120" y1="193" x2="120" y2="207" stroke="#33C7FF" stroke-width="3" stroke-linecap="butt"/>
                                 
-                                <!-- Inner white circle -->
-                                <circle cx="120" cy="120" r="70" class="tide-inner-circle" stroke-width="1"/>
+                                <!-- Tide level arc - MUST USE SAME cx, cy, r as above -->
+                                <path id="tide-arc" d="" fill="none" stroke-width="14" stroke-linecap="butt"/>
+                                
+                                <!-- Inner circle -->
+                                <circle cx="120" cy="120" r="72" class="tide-inner-circle" stroke-width="1"/>
                                 
                                 <!-- Rising label (left) -->
-                                <text x="18" y="123" text-anchor="middle" font-size="11" class="tide-side-label">rising</text>
+                                <text x="18" y="123" text-anchor="middle" font-size="8" class="tide-side-label">rising</text>
                                 
                                 <!-- Falling label (right) -->
-                                <text x="224" y="123" text-anchor="middle" font-size="11" class="tide-side-label falling">falling</text>
+                                <text x="224" y="123" text-anchor="middle" font-size="8" class="tide-side-label falling">falling</text>
                             </svg>
                             
                             <!-- Swipeable Center Display -->
@@ -75,7 +97,7 @@
                                     
                                     <!-- View 1: Today's High/Low -->
                                     <div class="dial-swipe-panel active">
-                                        <div class="tide-center-label">Today</div>
+                                        <div class="tide-center-label">Future Tides</div>
                                         <div class="tide-center-values">
                                             <div class="tide-high-value">High: <span id="today-high">--.-</span>ft</div>
                                             <div class="tide-low-value">Low: <span id="today-low">--.-</span>ft</div>

@@ -99,7 +99,7 @@ class TideService:
             now = datetime.now(self.timezone)
             
             # Get predictions starting from today
-            begin_date = now.strftime("%Y%m%d")
+            begin_date = (now - timedelta(days=1)).strftime("%Y%m%d")
             end_date = (now + timedelta(days=days)).strftime("%Y%m%d")
             
             params = {

@@ -447,125 +447,234 @@ function updateTideDial(percentage, isRising) {
 }
 
 // Create tide chart using real NOAA data
+// REPLACE the existing createTideChart function in app.js with this complete version
+
 function createTideChart(predictions, currentLevel) {
     const canvas = document.getElementById('tide-chart');
     if (!canvas) return;
     
+    const container = canvas.parentElement;
     const ctx = canvas.getContext('2d');
     
-    // Set canvas size
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    // Get container dimensions
+    const rect = container.getBoundingClientRect();
+    const width = Math.floor(rect.width) || 700;
+    const height = Math.floor(rect.height) || 180;
     
-    const width = canvas.width;
-    const height = canvas.height;
-    const padding = 40;
+    // Set canvas size with device pixel ratio for crisp rendering
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    ctx.scale(dpr, dpr);
     
-    // Clear canvas
+    // Padding for labels
+    const padding = { top: 22, right: 12, bottom: 26, left: 36 };
+    const chartW = width - padding.left - padding.right;
+    const chartH = height - padding.top - padding.bottom;
+    
     ctx.clearRect(0, 0, width, height);
     
-    // Get CSS colors
-    const borderColor = getCSSVar('--color-border');
+    // Get theme colors from CSS variables
     const accentColor = getCSSVar('--color-accent');
     const highTideColor = getCSSVar('--color-high-tide');
     const lowTideColor = getCSSVar('--color-low-tide');
+    const textColor = getCSSVar('--color-text');
     const textDimColor = getCSSVar('--color-text-dim');
+    const borderColor = getCSSVar('--color-border');
+    const turquoiseColor = getCSSVar('--color-turquoise');
     
-    // Filter today's predictions
+    // Helper to convert hex to rgba
+    const hexToRgba = (hex, alpha) => {
+        if (!hex || hex[0] !== '#') return `rgba(128,128,128,${alpha})`;
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+    };
+    
+    // Date boundaries
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayEnd = new Date(todayStart);
-    todayEnd.setDate(todayEnd.getDate() + 1);
+    const todayEnd = new Date(todayStart.getTime() + 86400000);
+    const yesterdayStart = new Date(todayStart.getTime() - 86400000);
+    const tomorrowEnd = new Date(todayEnd.getTime() + 86400000);
     
-    const todaysPredictions = predictions.filter(pred => {
-        const predTime = new Date(pred.time);
-        return predTime >= todayStart && predTime < todayEnd;
+    // Sort predictions by time
+    const sortedPredictions = [...predictions].sort((a, b) => 
+        new Date(a.time) - new Date(b.time)
+    );
+    
+    // Filter tides by day
+    const filterByRange = (start, end) => sortedPredictions.filter(p => {
+        const t = new Date(p.time);
+        return t >= start && t < end;
     });
     
-    if (todaysPredictions.length === 0) return;
+    const yesterdayTides = filterByRange(yesterdayStart, todayStart);
+    const todayTides = filterByRange(todayStart, todayEnd);
+    const tomorrowTides = filterByRange(todayEnd, tomorrowEnd);
     
-    // Find min/max heights for scaling
-    const heights = todaysPredictions.map(p => p.height);
-    const minHeight = Math.min(...heights) - 1;
-    const maxHeight = Math.max(...heights) + 1;
-    const heightRange = maxHeight - minHeight;
+    // Build array: yesterday's last + today's all + tomorrow's first
+    const allTides = [];
+    if (yesterdayTides.length > 0) {
+        allTides.push({ ...yesterdayTides[yesterdayTides.length - 1], isToday: false });
+    }
+    todayTides.forEach(t => allTides.push({ ...t, isToday: true }));
+    if (tomorrowTides.length > 0) {
+        allTides.push({ ...tomorrowTides[0], isToday: false });
+    }
     
-    // Convert predictions to canvas coordinates
-    const points = todaysPredictions.map(pred => {
-        const predTime = new Date(pred.time);
-        const hours = predTime.getHours() + predTime.getMinutes() / 60;
-        
-        const x = padding + (hours / 24) * (width - 2 * padding);
-        const y = height - padding - ((pred.height - minHeight) / heightRange) * (height - 2 * padding);
-        
-        return { x, y, time: predTime, height: pred.height, type: pred.type };
+    // Need at least 2 points to draw
+    if (allTides.length < 2) {
+        ctx.fillStyle = textDimColor;
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Insufficient tide data', width / 2, height / 2);
+        return;
+    }
+    
+    // Calculate Y scale
+    const heights = allTides.map(p => p.height);
+    const minH = Math.floor(Math.min(...heights) - 1);
+    const maxH = Math.ceil(Math.max(...heights) + 1);
+    const hRange = maxH - minH;
+    
+    // Coordinate conversion functions
+    const hoursToX = (hrs) => padding.left + (hrs / 24) * chartW;
+    const heightToY = (h) => padding.top + (1 - (h - minH) / hRange) * chartH;
+    
+    // Convert tides to pixel coordinates
+    const points = allTides.map(p => {
+        const t = new Date(p.time);
+        const hoursSinceMidnight = (t - todayStart) / 3600000;
+        return {
+            x: hoursToX(hoursSinceMidnight),
+            y: heightToY(p.height),
+            height: p.height,
+            type: p.type,
+            isToday: p.isToday
+        };
     });
     
-    // Draw grid lines
-    ctx.strokeStyle = borderColor;
+    // Draw horizontal grid lines
+    ctx.strokeStyle = hexToRgba(borderColor, 0.2);
     ctx.lineWidth = 1;
-    for (let i = 0; i <= 4; i++) {
-        const y = padding + (i / 4) * (height - 2 * padding);
+    for (let h = minH; h <= maxH; h += 2.5) {
+        const y = heightToY(h);
         ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(width - padding, y);
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
         ctx.stroke();
     }
     
-    // Draw smooth curve through high/low points
-    if (points.length >= 2) {
-        ctx.strokeStyle = accentColor;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
+    // Catmull-Rom spline interpolation for smooth curve
+    function catmullRom(p0, p1, p2, p3, t) {
+        const t2 = t * t;
+        const t3 = t2 * t;
+        return 0.5 * (
+            (2 * p1) +
+            (-p0 + p2) * t +
+            (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+            (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+        );
+    }
+    
+    // Generate smooth curve points
+    const curvePoints = [];
+    for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[Math.max(0, i - 1)];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = points[Math.min(points.length - 1, i + 2)];
         
-        // Create smooth curve using quadratic bezier
-        ctx.moveTo(points[0].x, points[0].y);
-        
-        for (let i = 0; i < points.length - 1; i++) {
-            const current = points[i];
-            const next = points[i + 1];
-            const midX = (current.x + next.x) / 2;
-            const midY = (current.y + next.y) / 2;
-            
-            ctx.quadraticCurveTo(current.x, current.y, midX, midY);
+        for (let t = 0; t < 1; t += 0.025) {
+            curvePoints.push({
+                x: catmullRom(p0.x, p1.x, p2.x, p3.x, t),
+                y: catmullRom(p0.y, p1.y, p2.y, p3.y, t)
+            });
         }
-        
-        // Last segment
-        const lastPoint = points[points.length - 1];
-        ctx.lineTo(lastPoint.x, lastPoint.y);
-        ctx.stroke();
-        
-        // Draw points for high/low tides
-        points.forEach(point => {
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
-            ctx.fillStyle = point.type === 'H' ? highTideColor : lowTideColor;
-            ctx.fill();
-        });
     }
+    curvePoints.push(points[points.length - 1]);
     
-    // Draw current time indicator
-    const currentHour = now.getHours() + now.getMinutes() / 60;
-    const currentX = padding + (currentHour / 24) * (width - 2 * padding);
-    ctx.strokeStyle = '#ffa500';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
+    // Clip to chart area
+    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(currentX, padding);
-    ctx.lineTo(currentX, height - padding);
+    ctx.rect(padding.left, padding.top, chartW, chartH);
+    ctx.clip();
+    
+    // Draw smooth curve
+    ctx.beginPath();
+    ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+    for (let i = 1; i < curvePoints.length; i++) {
+        ctx.lineTo(curvePoints[i].x, curvePoints[i].y);
+    }
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    
+    // Draw tide points and labels (only for today's tides)
+    points.forEach(pt => {
+        if (!pt.isToday) return;
+        
+        // Draw filled circle
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = pt.type === 'H' ? highTideColor : lowTideColor;
+        ctx.fill();
+        
+        // Draw height label
+        ctx.fillStyle = textColor;
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = pt.type === 'H' ? 'bottom' : 'top';
+        const labelY = pt.type === 'H' ? pt.y + 15 : pt.y - 15;
+        ctx.fillText(pt.height.toFixed(2), pt.x, labelY);
+    });
+    
+    // Draw current time vertical line
+    const currentHours = now.getHours() + now.getMinutes() / 60;
+    const currentX = hoursToX(currentHours);
+    
+    ctx.strokeStyle = turquoiseColor;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.moveTo(currentX, padding.top);
+    ctx.lineTo(currentX, padding.top + chartH);
     ctx.stroke();
     ctx.setLineDash([]);
     
-    // Add time labels
+    ctx.restore(); // Remove clipping
+    
+    // Draw Y-axis labels
     ctx.fillStyle = textDimColor;
-    ctx.font = '12px sans-serif';
-    ctx.fillText('12 AM', padding, height - 10);
-    ctx.fillText('6 AM', padding + (width - 2 * padding) * 0.25, height - 10);
-    ctx.fillText('12 PM', padding + (width - 2 * padding) * 0.5, height - 10);
-    ctx.fillText('6 PM', padding + (width - 2 * padding) * 0.75, height - 10);
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let h = minH; h <= maxH; h += 2.5) {
+        ctx.fillText(h.toFixed(1), padding.left - 6, heightToY(h));
+    }
+    
+    // Draw X-axis time labels
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const timeLabels = [
+        [0, '12AM'], [4, '4AM'], [8, '8AM'], [12, '12PM'], 
+        [16, '4PM'], [20, '8PM'], [24, '12AM']
+    ];
+    timeLabels.forEach(([hr, label]) => {
+        ctx.fillText(label, hoursToX(hr), height - padding.bottom + 6);
+    });
 }
 
-// Create tide table with real data
+// Add this function right after createTideChart in app.js
+
+// Replace the createTideTable function in app.js with this version
+
 function createTideTable(predictions) {
     const tableDiv = document.getElementById('tide-table');
     if (!tableDiv) return;
@@ -575,54 +684,119 @@ function createTideTable(predictions) {
     
     predictions.forEach(pred => {
         const predDate = new Date(pred.time);
-        const dateKey = predDate.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
-        });
+        const dateKey = predDate.toISOString().split('T')[0]; // YYYY-MM-DD
         
         if (!dayGroups[dateKey]) {
             dayGroups[dateKey] = {
-                highs: [],
-                lows: []
+                date: predDate,
+                tides: []
             };
         }
         
-        if (pred.type === 'H') {
-            dayGroups[dateKey].highs.push(pred);
-        } else {
-            dayGroups[dateKey].lows.push(pred);
-        }
+        dayGroups[dateKey].tides.push(pred);
     });
+    
+    // Sort tides within each day by time
+    Object.values(dayGroups).forEach(day => {
+        day.tides.sort((a, b) => new Date(a.time) - new Date(b.time));
+    });
+    
+    // Get astronomy data for moon phase and sun times
+    const astroData = state.astronomyData?.data || {};
     
     // Build table HTML
-    let html = '<table><thead><tr><th>Day</th><th>High Tide</th><th>Low Tide</th></tr></thead><tbody>';
+    let html = `
+        <table class="enhanced-tide-table">
+            <thead>
+                <tr>
+                    <th class="day-col"></th>
+                    <th class="moon-col">🌙</th>
+                    <th class="sun-col">☀️</th>
+                    <th class="tide-col">1<sup>st</sup> TIDE</th>
+                    <th class="tide-col">2<sup>nd</sup> TIDE</th>
+                    <th class="tide-col">3<sup>rd</sup> TIDE</th>
+                    <th class="tide-col">4<sup>th</sup> TIDE</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
     
-    Object.keys(dayGroups).slice(0, 7).forEach(dateKey => {
+    // Get sorted day keys (first 7 days)
+    const sortedDays = Object.keys(dayGroups).sort().slice(0, 7);
+    
+    sortedDays.forEach((dateKey, index) => {
         const day = dayGroups[dateKey];
+        const date = day.date;
         
-        // Use pre-formatted 12hr times if available
-        const highsHtml = day.highs.map(h => 
-            `${h.time_12hr || formatTime(h.time)} (${h.height}ft)`
-        ).join('<br>');
+        // Format day info
+        const dayNum = index + 1;
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
         
-        const lowsHtml = day.lows.map(l => 
-            `${l.time_12hr || formatTime(l.time)} (${l.height}ft)`
-        ).join('<br>');
+        // Moon phase (use current moon data for all days - could be enhanced)
+        const moonIllumination = astroData.moon_illumination || 50;
+        const moonEmoji = astroData.moon_emoji || '🌓';
         
+        // Sun times (use current sun data - could be enhanced per day)
+        const sunrise = astroData.sunrise || '—';
+        const sunset = astroData.sunset || '—';
+        
+        html += `<tr>`;
+        
+        // Day column
         html += `
-            <tr>
-                <td><strong>${dateKey}</strong></td>
-                <td>${highsHtml || 'N/A'}</td>
-                <td>${lowsHtml || 'N/A'}</td>
-            </tr>
+            <td class="day-cell">
+                <div class="day-num">${dayNum}</div>
+                <div class="day-name">${dayName}</div>
+            </td>
         `;
+        
+        // Moon column
+        html += `
+            <td class="moon-cell">
+                <div class="moon-icon">${moonEmoji}</div>
+                <div class="moon-percent">${moonIllumination}%</div>
+            </td>
+        `;
+        
+        // Sun column
+        html += `
+            <td class="sun-cell">
+                <div class="sun-time">
+                    <span class="sun-icon">▲</span> ${sunrise}
+                </div>
+                <div class="sun-time">
+                    <span class="sun-icon">▼</span> ${sunset}
+                </div>
+            </td>
+        `;
+        
+        // Tide columns (up to 4)
+        for (let i = 0; i < 4; i++) {
+            if (i < day.tides.length) {
+                const tide = day.tides[i];
+                const isHigh = tide.type === 'H';
+                const tideClass = isHigh ? 'high-tide' : 'low-tide';
+                const tideIcon = isHigh ? '▲' : '▼';
+                
+                html += `
+                    <td class="tide-cell ${tideClass}">
+                        <div class="tide-time">${tide.time_12hr || formatTime(tide.time)}</div>
+                        <div class="tide-height">
+                            <span class="tide-icon">${tideIcon}</span> ${tide.height} ft
+                        </div>
+                    </td>
+                `;
+            } else {
+                html += `<td class="tide-cell empty">—</td>`;
+            }
+        }
+        
+        html += `</tr>`;
     });
     
-    html += '</tbody></table>';
+    html += `</tbody></table>`;
     tableDiv.innerHTML = html;
 }
-
 function displayTodaysHighLow(predictions) {
     /**
      * Extract and display today's highest high and lowest low tide

@@ -79,6 +79,9 @@ body {
     line-height: 1.2;
     transition: background-color var(--transition-normal), 
                 color var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* ============================================================================
@@ -87,9 +90,11 @@ body {
 
 .container {
     display: flex;
-    height: 100vh;
-    width: 100vw;
+    height: 600px;
+    width: 1024px;
     padding-bottom: 32px;
+    transform-origin: center center;
+    position: relative;
 }
 
 /* ============================================================================
@@ -322,45 +327,20 @@ body {
 }
 
 /* ============================================================================
-   TIDE DIAL - SWIPEABLE CENTER DISPLAY
+   TIDE DIAL - CENTER DISPLAY
    ============================================================================ */
 
-.tide-center-swipe-container {
+.tide-center-display {
     position: absolute;
     top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 75%;
-    height: 110px;
-    overflow: hidden;
-    cursor: grab;
-    user-select: none;
-}
-
-.tide-center-swipe-container:active {
-    cursor: grabbing;
-}
-
-.dial-swipe-wrapper {
-    display: flex;
-    height: 100%;
-    transition: transform var(--transition-normal);
-    position: relative;
-}
-
-.dial-swipe-panel {
-    min-width: 100%;
-    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    pointer-events: none;
-}
-
-.dial-swipe-panel.active {
-    pointer-events: auto;
 }
 
 .tide-center-label {
@@ -370,34 +350,6 @@ body {
     font-weight: 500;
     text-transform: capitalize;
     transition: color var(--transition-normal);
-}
-
-/* Today's High/Low View */
-.tide-center-values {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    font-size: 1rem;
-    color: var(--color-text);
-    font-weight: 500;
-    transition: color var(--transition-normal);
-}
-
-.tide-high-value {
-    color: var(--color-high-tide);
-    transition: color var(--transition-normal);
-}
-
-.tide-low-value {
-    color: var(--color-low-tide);
-    transition: color var(--transition-normal);
-}
-
-#today-high, 
-#today-low {
-    font-weight: 700;
-    font-size: 0.95rem;
 }
 
 /* Next Tide View */
@@ -655,6 +607,7 @@ body {
     transition: transform var(--transition-normal);
     position: relative;
     min-height: 0;
+    overflow: hidden;
 }
 
 .swipe-panel {
@@ -663,6 +616,7 @@ body {
     display: none;
     flex-direction: column;
     min-height: 0;
+    overflow: hidden;
 }
 
 .swipe-panel.active {
@@ -683,8 +637,9 @@ body {
 .chart-container {
     flex: 1;
     position: relative;
-    min-height: fit-content;
+    min-height: 0;
     width: 100%;
+    overflow: hidden;
 }
 
 #tide-chart {
@@ -694,6 +649,8 @@ body {
     width: 100%;
     height: 100%;
     display: block;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 /* ============================================================================
@@ -922,13 +879,13 @@ body {
 
 .theme-toggle {
     position: fixed;
-    bottom: 40px;
-    left: 6px;
+    bottom: 70px;
+    left: 8px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 42px;
-    height: 42px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -953,13 +910,13 @@ body {
 
 .info-button {
     position: fixed;
-    bottom: 40px;
-    left: 50px;
+    bottom: 70px;
+    left: 60px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 42px;
-    height: 42px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1129,13 +1086,13 @@ body {
 
 .refresh-button {
     position: fixed;
-    bottom: 40px;
-    left: 94px;
+    bottom: 70px;
+    left: 112px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 42px;
-    height: 42px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;

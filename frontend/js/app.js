@@ -36,7 +36,7 @@ const CHART = {
     CURVE_RESOLUTION: 0.025,
     LINE_WIDTH: 2.5,
     POINT_RADIUS: 5,
-    LABEL_OFFSET: 15,
+    LABEL_OFFSET: 20,
     GRID_STEP: 2.5
 };
 
@@ -258,7 +258,6 @@ async function initApp() {
     await checkNetworkConnectivity();
     
     initSwipe();
-    initDialSwipe();
     startCountdownTimer();
     
     await Promise.all([
@@ -824,7 +823,7 @@ function createTideChart(predictions, currentLevel) {
     
     if (allTides.length < CHART.MIN_POINTS) {
         ctx.fillStyle = colors.textDim;
-        ctx.font = '12px sans-serif';
+        ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('Insufficient tide data', width / 2, height / 2);
         return;
@@ -919,7 +918,7 @@ function createTideChart(predictions, currentLevel) {
         ctx.fill();
         
         ctx.fillStyle = colors.text;
-        ctx.font = 'bold 10px sans-serif';
+        ctx.font = 'bold 16px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = pt.type === 'H' ? 'bottom' : 'top';
         const labelY = pt.type === 'H' ? pt.y + CHART.LABEL_OFFSET : pt.y - CHART.LABEL_OFFSET;
@@ -943,7 +942,7 @@ function createTideChart(predictions, currentLevel) {
     
     // Draw axes labels
     ctx.fillStyle = colors.textDim;
-    ctx.font = '10px sans-serif';
+    ctx.font = '12px sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (let h = minH; h <= maxH; h += CHART.GRID_STEP) {
@@ -1220,69 +1219,6 @@ function switchView(index) {
     }
 }
 
-function initDialSwipe() {
-    const container = document.getElementById('dial-swipe-container');
-    const indicators = document.querySelectorAll('.dial-indicator');
-    
-    if (!container) return;
-    
-    indicators.forEach((indicator, index) => {
-        indicator.addEventListener('click', (e) => {
-            e.stopPropagation();
-            switchDialView(index);
-        });
-    });
-    
-    const startDrag = (x) => {
-        dialSwipeState.startX = x;
-        dialSwipeState.isDragging = true;
-    };
-    
-    const moveDrag = (x) => {
-        if (dialSwipeState.isDragging) dialSwipeState.currentX = x;
-    };
-    
-    const endDrag = () => {
-        if (!dialSwipeState.isDragging) return;
-        dialSwipeState.isDragging = false;
-        
-        const diff = dialSwipeState.startX - dialSwipeState.currentX;
-        if (Math.abs(diff) > DIAL_SWIPE_THRESHOLD) {
-            if (diff > 0 && dialSwipeState.currentView < 1) {
-                switchDialView(dialSwipeState.currentView + 1);
-            } else if (diff < 0 && dialSwipeState.currentView > 0) {
-                switchDialView(dialSwipeState.currentView - 1);
-            }
-        }
-    };
-    
-    container.addEventListener('mousedown', (e) => { startDrag(e.clientX); e.preventDefault(); });
-    container.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX), { passive: true });
-    container.addEventListener('mousemove', (e) => moveDrag(e.clientX));
-    container.addEventListener('touchmove', (e) => moveDrag(e.touches[0].clientX), { passive: true });
-    container.addEventListener('mouseup', endDrag);
-    container.addEventListener('touchend', endDrag);
-    container.addEventListener('mouseleave', endDrag);
-}
-
-function switchDialView(index) {
-    const wrapper = document.getElementById('dial-swipe-wrapper');
-    const panels = document.querySelectorAll('.dial-swipe-panel');
-    const indicators = document.querySelectorAll('.dial-indicator');
-    
-    if (!wrapper) return;
-    
-    wrapper.style.transform = `translateX(-${index * 100}%)`;
-    
-    panels.forEach(panel => panel.classList.remove('active'));
-    indicators.forEach(ind => ind.classList.remove('active'));
-    
-    if (panels[index]) panels[index].classList.add('active');
-    if (indicators[index]) indicators[index].classList.add('active');
-    
-    dialSwipeState.currentView = index;
-}
-
 // ============================================================================
 // INFO MODAL
 // ============================================================================
@@ -1339,6 +1275,48 @@ function populateInfoModal() {
         updateElement('info-last-update', `${dateStr} at ${timeStr}`);
     }
 }
+
+// ============================================================================
+// AUTO-SCALING FOR FULLSCREEN
+// ============================================================================
+
+function scaleToFit() {
+    const container = document.querySelector('.container');
+    if (!container) return;
+    
+    const designWidth = 1024;
+    const designHeight = 600;
+    
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    const scaleX = windowWidth / designWidth;
+    const scaleY = windowHeight / designHeight;
+    const scale = Math.min(scaleX, scaleY);
+    
+    container.style.transform = `scale(${scale})`;
+    
+    console.log(`🔍 Scaled to ${(scale * 100).toFixed(1)}% (${windowWidth}x${windowHeight} viewport)`);
+    
+    // Redraw chart after scaling to ensure proper sizing
+    setTimeout(() => {
+        if (typeof createTideChart === 'function' && state?.tideData?.predictions) {
+            createTideChart(state.tideData.predictions, state.tideData.current);
+        }
+    }, 100);
+}
+
+// Scale on load and on resize (debounced)
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(scaleToFit, 100);
+});
+
+// Initial scale after everything loads
+window.addEventListener('load', () => {
+    setTimeout(scaleToFit, 500);
+});
 
 // ============================================================================
 // SCREEN DIMMING
@@ -1436,10 +1414,8 @@ window.TideWatch = {
     updateTideDial,
     createTideChart,
     switchView,
-    switchDialView,
     toggleTheme,
     manualRefresh,
     checkNetworkConnectivity,
     state,
-    dialSwipeState
 };

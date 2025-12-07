@@ -1260,6 +1260,96 @@ function switchDialView(index) {
     dialSwipeState.currentView = index;
 }
 
+/**
+ * Screen Dimming Overlay for Kiosk Mode
+ */
+
+// ============================================================================
+// SCREEN DIMMING
+// ============================================================================
+
+const DIMMING = {
+    TIMEOUT: 300000,  // 5 minutes in milliseconds
+    FADE_DURATION: 1000  // 1 second fade
+};
+
+let dimTimer = null;
+let isDimmed = false;
+
+function createDimOverlay() {
+    // Create overlay element
+    const overlay = document.createElement('div');
+    overlay.id = 'dim-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0);
+        pointer-events: none;
+        transition: background ${DIMMING.FADE_DURATION}ms ease;
+        z-index: 9999;
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function dimScreen() {
+    const overlay = document.getElementById('dim-overlay');
+    if (overlay && !isDimmed) {
+        overlay.style.background = 'rgba(0, 0, 0, 0.7)';
+        isDimmed = true;
+        console.log('🌙 Screen dimmed');
+    }
+}
+
+function brightenScreen() {
+    const overlay = document.getElementById('dim-overlay');
+    if (overlay && isDimmed) {
+        overlay.style.background = 'rgba(0, 0, 0, 0)';
+        isDimmed = false;
+        console.log('☀️ Screen brightened');
+    }
+}
+
+function resetDimTimer() {
+    brightenScreen();
+    
+    if (dimTimer) {
+        clearTimeout(dimTimer);
+    }
+    
+    dimTimer = setTimeout(dimScreen, DIMMING.TIMEOUT);
+}
+
+function initDimming() {
+    // Create overlay
+    createDimOverlay();
+    
+    // Listen for user activity
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => {
+        document.addEventListener(event, resetDimTimer, { passive: true });
+    });
+    
+    // Start timer
+    resetDimTimer();
+    
+    console.log('🌙 Screen dimming initialized (5 min timeout)');
+}
+
+// Initialize dimming when page loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDimming);
+} else {
+    initDimming();
+}
+
+// Also export for manual control if needed
+window.TideWatch.dimScreen = dimScreen;
+window.TideWatch.brightenScreen = brightenScreen;
+
 // ============================================================================
 // EXPORT
 // ============================================================================

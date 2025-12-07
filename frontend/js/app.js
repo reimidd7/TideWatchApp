@@ -14,7 +14,8 @@ const REFRESH_INTERVALS = {
     WEATHER: 600000,   // 10 minutes
     ASTRONOMY: 43200000, // 12 hours
     COUNTDOWN: 30000,  // 30 seconds
-    CLOCK: 1000        // 1 second
+    CLOCK: 1000,       // 1 second
+    NETWORK_CHECK: 60000 // 1 minute
 };
 
 const SWIPE_THRESHOLD = 50;
@@ -73,6 +74,7 @@ const state = {
     astronomyData: null,
     lastUpdate: null,
     isConnected: false,
+    networkOnline: true,
     theme: 'dark'
 };
 
@@ -117,6 +119,89 @@ function updateThemeIcon() {
 }
 
 // ============================================================================
+// NETWORK CONNECTIVITY CHECK
+// ============================================================================
+
+async function checkNetworkConnectivity() {
+    try {
+        // Try to reach a reliable external endpoint
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch('https://www.google.com/favicon.ico', {
+            method: 'HEAD',
+            mode: 'no-cors',
+            cache: 'no-cache',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        state.networkOnline = true;
+        updateNetworkStatus(true);
+        return true;
+    } catch (error) {
+        state.networkOnline = false;
+        updateNetworkStatus(false);
+        console.error('Network check failed:', error);
+        return false;
+    }
+}
+
+function updateNetworkStatus(isOnline) {
+    const networkStatus = document.getElementById('network-status');
+    if (networkStatus) {
+        if (isOnline) {
+            networkStatus.textContent = '📡 Network OK';
+            networkStatus.style.color = '';
+        } else {
+            networkStatus.textContent = '📡 No Internet';
+            networkStatus.style.color = '#D95E5E';
+        }
+    }
+}
+
+// ============================================================================
+// MANUAL REFRESH FUNCTIONALITY
+// ============================================================================
+
+async function manualRefresh() {
+    const refreshButton = document.getElementById('refresh-button');
+    
+    // Add spinning animation
+    if (refreshButton) {
+        refreshButton.classList.add('spinning');
+    }
+    
+    console.log('🔄 Manual refresh triggered');
+    
+    // Check network first
+    const networkOk = await checkNetworkConnectivity();
+    
+    if (!networkOk) {
+        console.warn('⚠️ No internet connection');
+        if (refreshButton) {
+            setTimeout(() => refreshButton.classList.remove('spinning'), 1000);
+        }
+        return;
+    }
+    
+    // Reload all data
+    await Promise.all([
+        loadConfig(),
+        loadWeatherData(),
+        loadAstronomyData(),
+        loadTideData()
+    ]);
+    
+    // Remove spinning animation after data loads
+    if (refreshButton) {
+        setTimeout(() => refreshButton.classList.remove('spinning'), 1000);
+    }
+    
+    console.log('✅ Manual refresh complete');
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
@@ -134,6 +219,11 @@ function setupEventListeners() {
     if (themeToggle) {
         themeToggle.addEventListener('click', toggleTheme);
     }
+    
+    const refreshButton = document.getElementById('refresh-button');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', manualRefresh);
+    }
 }
 
 async function initApp() {
@@ -142,6 +232,7 @@ async function initApp() {
     
     await loadConfig();
     await checkHealth();
+    await checkNetworkConnectivity();
     
     initSwipe();
     initDialSwipe();
@@ -157,6 +248,7 @@ async function initApp() {
     setInterval(loadTideData, REFRESH_INTERVALS.TIDE);
     setInterval(loadAstronomyData, REFRESH_INTERVALS.ASTRONOMY);
     setInterval(loadWeatherData, REFRESH_INTERVALS.WEATHER);
+    setInterval(checkNetworkConnectivity, REFRESH_INTERVALS.NETWORK_CHECK);
     
     scheduleMidnightRefresh();
     
@@ -635,6 +727,7 @@ function updateTideDial(percentage, isRising) {
 
 /**
  * Chart creation, table generation, weather/astronomy display, and swipe interactions
+ * (Remaining functions unchanged from original app.js - continuing with createTideChart, etc.)
  */
 
 // ============================================================================
@@ -1177,6 +1270,8 @@ window.TideWatch = {
     switchView,
     switchDialView,
     toggleTheme,
+    manualRefresh,
+    checkNetworkConnectivity,
     state,
     dialSwipeState
 };

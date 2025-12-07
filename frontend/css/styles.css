@@ -681,7 +681,7 @@ body {
 .chart-container {
     flex: 1;
     position: relative;
-    min-height: 0;
+    min-height: fit-content;
     width: 100%;
 }
 
@@ -893,6 +893,12 @@ body {
     gap: 4px;
 }
 
+#network-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 #current-time {
     color: var(--color-text);
     font-weight: 600;
@@ -937,6 +943,50 @@ body {
 }
 
 /* ============================================================================
+   MANUAL REFRESH BUTTON
+   ============================================================================ */
+
+.refresh-button {
+    position: fixed;
+    bottom: 38px;
+    left: 56px;
+    background: var(--color-card);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all var(--transition-normal);
+}
+
+.refresh-button:hover {
+    background: var(--color-turquoise);
+    transform: scale(1.05);
+}
+
+.refresh-button:active {
+    transform: scale(0.95);
+}
+
+.refresh-button.spinning {
+    animation: spin 1s linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================================================
    RESPONSIVE ADJUSTMENTS
    ============================================================================ */
 
@@ -969,7 +1019,8 @@ body {
         cursor: pointer;
     }
     
-    .theme-toggle {
+    .theme-toggle,
+    .refresh-button {
         width: 46px;
         height: 46px;
         font-size: 1.3rem;

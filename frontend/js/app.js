@@ -220,10 +220,33 @@ function setupEventListeners() {
         themeToggle.addEventListener('click', toggleTheme);
     }
     
-    const refreshButton = document.getElementById('refresh-button');
-    if (refreshButton) {
-        refreshButton.addEventListener('click', manualRefresh);
+    const infoButton = document.getElementById('info-button');
+    const infoModalOverlay = document.getElementById('info-modal-overlay');
+    const infoModalClose = document.getElementById('info-modal-close');
+    
+    if (infoButton) {
+        infoButton.addEventListener('click', openInfoModal);
     }
+    
+    if (infoModalClose) {
+        infoModalClose.addEventListener('click', closeInfoModal);
+    }
+    
+    if (infoModalOverlay) {
+        // Close when clicking outside the modal
+        infoModalOverlay.addEventListener('click', (e) => {
+            if (e.target === infoModalOverlay) {
+                closeInfoModal();
+            }
+        });
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeInfoModal();
+        }
+    });
 }
 
 async function initApp() {
@@ -1260,9 +1283,62 @@ function switchDialView(index) {
     dialSwipeState.currentView = index;
 }
 
-/**
- * Screen Dimming Overlay for Kiosk Mode
- */
+// ============================================================================
+// INFO MODAL
+// ============================================================================
+
+function openInfoModal() {
+    const modal = document.getElementById('info-modal-overlay');
+    if (modal) {
+        modal.classList.add('active');
+        populateInfoModal();
+    }
+}
+
+function closeInfoModal() {
+    const modal = document.getElementById('info-modal-overlay');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function populateInfoModal() {
+    // Location info
+    if (state.config?.location) {
+        const loc = state.config.location;
+        updateElement('info-location-name', loc.name || 'Unknown');
+        updateElement('info-coordinates', 
+            `${loc.latitude?.toFixed(4)}°, ${loc.longitude?.toFixed(4)}°`);
+    }
+    
+    // Tide station info
+    if (state.config?.location?.station_id) {
+        const stationId = state.config.location.station_id;
+        const obsStation = state.config.location.observation_station;
+        
+        if (stationId === obsStation) {
+            updateElement('info-tide-station', `NOAA ${stationId}`);
+        } else {
+            updateElement('info-tide-station', 
+                `NOAA ${stationId} (pred) / ${obsStation} (obs)`);
+        }
+    }
+    
+    // Last update time
+    if (state.lastUpdate) {
+        const timeStr = state.lastUpdate.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        const dateStr = state.lastUpdate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+        updateElement('info-last-update', `${dateStr} at ${timeStr}`);
+    }
+}
 
 // ============================================================================
 // SCREEN DIMMING
@@ -1346,9 +1422,11 @@ if (document.readyState === 'loading') {
     initDimming();
 }
 
-// Also export for manual control if needed
+// Update exports
 window.TideWatch.dimScreen = dimScreen;
 window.TideWatch.brightenScreen = brightenScreen;
+window.TideWatch.openInfoModal = openInfoModal;
+window.TideWatch.closeInfoModal = closeInfoModal;
 
 // ============================================================================
 // EXPORT

@@ -11,6 +11,85 @@
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">
         🌙
     </button>
+
+    <!-- Info Button -->
+    <button class="info-button" id="info-button" aria-label="Show information">
+        ℹ️
+    </button>
+
+    <!-- Info Modal -->
+    <div class="info-modal-overlay" id="info-modal-overlay">
+        <div class="info-modal">
+            <div class="info-modal-header">
+                <h2 class="info-modal-title">🌊 TideWatch</h2>
+                <button class="info-modal-close" id="info-modal-close" aria-label="Close">×</button>
+            </div>
+            <div class="info-modal-content">
+                <div class="info-section">
+                    <h3 class="info-section-title">Location</h3>
+                    <div class="info-item">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value" id="info-location-name">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Coordinates:</span>
+                        <span class="info-value" id="info-coordinates">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3 class="info-section-title">Data Sources</h3>
+                    <div class="info-item">
+                        <span class="info-label">Tide Station:</span>
+                        <span class="info-value" id="info-tide-station">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Weather:</span>
+                        <span class="info-value">Weather.gov API</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Astronomy:</span>
+                        <span class="info-value">US Naval Observatory</span>
+                    </div>
+                    <p class="info-description">
+                        Tide predictions from NOAA CO-OPS. Weather data from National Weather Service. 
+                        Sun/moon times from USNO Astronomical Applications.
+                    </p>
+                </div>
+
+                <div class="info-section">
+                    <h3 class="info-section-title">Updates</h3>
+                    <div class="info-item">
+                        <span class="info-label">Tides:</span>
+                        <span class="info-value">Every 6 minutes</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Weather:</span>
+                        <span class="info-value">Every 10 minutes</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Astronomy:</span>
+                        <span class="info-value">Every 12 hours</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Last Update:</span>
+                        <span class="info-value" id="info-last-update">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3 class="info-section-title">About</h3>
+                    <p class="info-description">
+                        TideWatch is a real-time tide, weather, and astronomy display designed for coastal communities. 
+                        Touch the screen to wake from dim mode. Data updates automatically in the background.
+                    </p>
+                    <p class="info-description" style="margin-top: 10px; text-align: center; font-size: 0.85rem;">
+                        Version 1.0 • Made with 🌊
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Manual Refresh Button -->
     <button class="refresh-button" id="refresh-button" aria-label="Refresh all data">
         🔄

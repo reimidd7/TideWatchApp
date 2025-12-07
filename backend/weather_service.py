@@ -63,7 +63,7 @@ class WeatherService:
         except Exception as e:
             print(f"Error getting observations: {e}")
             return None
-        
+            
     def get_weather(self):
         """Fetch current weather observations and forecast"""
         try:
@@ -82,12 +82,17 @@ class WeatherService:
             data = response.json()
             periods = data['properties']['periods']
             
+            # Debug logging
+            if current:
+                print(f"📊 Current observations - conditions: {current.get('conditions', 'NONE')}")
+            print(f"📊 Forecast - shortForecast: {periods[0].get('shortForecast', 'NONE')}")
+            
             # Build combined weather object
             weather_data = {
                 # Current conditions from observation station
                 'temperature': current['temperature'] if current else periods[0]['temperature'],
                 'temperature_unit': 'F',
-                'conditions': current['conditions'] if current else periods[0]['shortForecast'],
+                'conditions': current.get('conditions') if current and current.get('conditions') and current.get('conditions') != 'N/A' else periods[0]['shortForecast'],
                 'wind_speed': current['wind_speed'] if current else periods[0]['windSpeed'],
                 'wind_direction': current['wind_direction'] if current else periods[0]['windDirection'],
                 'wind_direction_degrees': current['wind_direction_degrees'] if current else None,
@@ -116,6 +121,8 @@ class WeatherService:
             
         except Exception as e:
             print(f"Error fetching weather: {e}")
+            import traceback
+            traceback.print_exc()
             # Return cached data if available
             return self.cached_data
             

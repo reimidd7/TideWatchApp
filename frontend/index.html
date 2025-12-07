@@ -52,17 +52,15 @@
                                 <div class="tide-extreme-time" id="high-time-display">--:--</div>
                             </div>
                             
-                            
                             <svg class="tide-dial" viewBox="0 0 240 240">
-                                <!-- Gradient Definitions -->
                                 <defs>
-                                    <!-- Gradient for falling tide (red at top to blue at bottom) -->
+                                    <!-- Gradient for falling tide (red at top to blue at bottom) - RIGHT side -->
                                     <linearGradient id="tideGradientFalling" x1="0%" y1="0%" x2="0%" y2="100%">
                                         <stop offset="0%" stop-color="#D95E5E" />
                                         <stop offset="100%" stop-color="#33C7FF" />
                                     </linearGradient>
                                     
-                                    <!-- Gradient for rising tide (blue at bottom to red at top) -->
+                                    <!-- Gradient for rising tide (blue at bottom to red at top) - LEFT side -->
                                     <linearGradient id="tideGradientRising" x1="0%" y1="100%" x2="0%" y2="0%">
                                         <stop offset="0%" stop-color="#33C7FF" />
                                         <stop offset="100%" stop-color="#D95E5E" />
@@ -78,7 +76,7 @@
                                 <!-- Low tide marker (bottom) -->
                                 <line x1="120" y1="193" x2="120" y2="207" stroke="#33C7FF" stroke-width="3" stroke-linecap="butt"/>
                                 
-                                <!-- Tide level arc - MUST USE SAME cx, cy, r as above -->
+                                <!-- Tide level arc - drawn via JS -->
                                 <path id="tide-arc" d="" fill="none" stroke-width="14" stroke-linecap="butt"/>
                                 
                                 <!-- Inner circle -->
@@ -95,22 +93,22 @@
                             <div class="tide-center-swipe-container" id="dial-swipe-container">
                                 <div class="dial-swipe-wrapper" id="dial-swipe-wrapper">
                                     
-                                    <!-- View 1: Today's High/Low -->
-                                    <div class="dial-swipe-panel active">
-                                        <div class="tide-center-label">Future Tides</div>
-                                        <div class="tide-center-values">
-                                            <div class="tide-high-value">High: <span id="today-high">--.-</span>ft</div>
-                                            <div class="tide-low-value">Low: <span id="today-low">--.-</span>ft</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- View 2: Next Tide with Countdown -->
+                                    <!-- View 1: Next Tide with Countdown -->
                                     <div class="dial-swipe-panel">
                                         <div class="tide-center-label">Next Tide</div>
                                         <div class="next-tide-info">
                                             <div class="next-tide-type" id="next-tide-type">Low</div>
                                             <div class="next-tide-height" id="next-tide-height">--.- ft</div>
                                             <div class="next-tide-countdown" id="next-tide-countdown">in --h --m</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- View 1: Today's High/Low -->
+                                    <div class="dial-swipe-panel active">
+                                        <div class="tide-center-label">Future Tides</div>
+                                        <div class="tide-center-values">
+                                            <div class="tide-high-value">High: <span id="today-high">--.-</span>ft</div>
+                                            <div class="tide-low-value">Low: <span id="today-low">--.-</span>ft</div>
                                         </div>
                                     </div>
                                     
@@ -142,7 +140,7 @@
                         <div class="info-card">
                             <h3>Wind Speed and Direction</h3>
                             <div class="wind-display">
-                                <div class="wind-arrow" id="wind-arrow">↗</div>
+                                <div class="wind-arrow" id="wind-arrow">↑</div>
                                 <div class="wind-speed" id="wind-speed">54 mph</div>
                             </div>
                         </div>
@@ -160,7 +158,36 @@
                         <div class="info-card">
                             <h3>Visibility</h3>
                             <div class="visibility-display">
-                                <div class="visibility-icon">👁️</div>
+                                <svg class="visibility-droplet" viewBox="0 0 100 120" id="visibility-droplet">
+                                    <defs>
+                                        <!-- Define the simple droplet shape as a clip path -->
+                                        <clipPath id="dropletClip">
+                                            <!-- Triangle with rounded top -->
+                                            <path d="M 50,110 L 20,30 Q 20,10 35,10 L 65,10 Q 80,10 80,30 Z" />
+                                        </clipPath>
+                                    </defs>
+                                    
+                                    <!-- Droplet outline (stroke only) -->
+                                    <path class="droplet-outline" 
+                                        d="M 50,110 L 20,30 Q 20,10 35,10 L 65,10 Q 80,10 80,30 Z" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        stroke-width="3"/>
+                                    
+                                    <!-- Fill container (clipped to droplet shape) -->
+                                    <g clip-path="url(#dropletClip)">
+                                        <!-- Background (empty state) -->
+                                        <rect x="0" y="0" width="100" height="120" fill="var(--color-border)" opacity="0.2"/>
+                                        
+                                        <!-- Fill level (animated) -->
+                                        <rect id="visibility-fill" 
+                                            x="0" 
+                                            y="120" 
+                                            width="100" 
+                                            height="0" 
+                                            fill="var(--color-turquoise)"/>
+                                    </g>
+                                </svg>
                                 <div class="visibility-value" id="visibility">10 mi</div>
                             </div>
                         </div>
@@ -171,7 +198,7 @@
                 
                         <!-- Moon -->
                         <div class="astro-card">
-                            <div class="moon-phase" id="moon-phase">🌙</div>
+                            <img src="assets/New Moon.svg" alt="Moon Phase" class="moon-phase-icon" id="moon-phase">
                             <div class="astro-times">
                                 <div class="astro-time">
                                     <span class="label">Moon Rise:</span>

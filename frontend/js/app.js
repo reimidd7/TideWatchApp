@@ -421,14 +421,17 @@ function getCSSVar(varName) {
 // Draw tide dial arc
 // Replace the existing updateTideDial function in app.js with this:
 
+// REPLACE the entire updateTideDial function in app.js with this:
+
+// REPLACE the entire updateTideDial function in app.js with this:
+
 function updateTideDial(percentage, isRising) {
     const arc = document.getElementById('tide-arc');
     if (!arc) return;
     
-    // IMPORTANT: These values must match the background ring (tide-ring-bg) in the SVG
     const centerX = 120;
     const centerY = 120;
-    const radius = 78;
+    const radius = 80;
     
     // Don't draw if percentage is essentially 0
     if (percentage < 0.01) {
@@ -439,48 +442,49 @@ function updateTideDial(percentage, isRising) {
     // Clamp percentage to valid range
     percentage = Math.max(0, Math.min(1, percentage));
     
-    // Convert degrees to radians
-    const toRad = (deg) => (deg * Math.PI) / 180;
-    
-    let startAngle, endAngle, sweepFlag;
-    
+    // Set the gradient based on direction
     if (isRising) {
-        // RISING: Arc on LEFT side (bottom to top, counter-clockwise visually)
-        // In SVG coords: bottom=90°, top=270°, going counter-clockwise means sweep=0
-        startAngle = 90;   // Bottom of circle
-        endAngle = 90 - (percentage * 180);  // Toward top, going left (CCW)
-        sweepFlag = 0;  // Counter-clockwise
         arc.setAttribute('stroke', 'url(#tideGradientRising)');
     } else {
-        // FALLING: Arc on RIGHT side (top to bottom, clockwise visually)
-        // In SVG coords: top=270° (or -90°), bottom=90°, going clockwise means sweep=1
-        startAngle = -90;  // Top of circle (same as 270°)
-        endAngle = -90 + (percentage * 180);  // Toward bottom, going right (CW)
-        sweepFlag = 1;  // Clockwise
         arc.setAttribute('stroke', 'url(#tideGradientFalling)');
     }
     
-    // Calculate start point
-    const x1 = centerX + radius * Math.cos(toRad(startAngle));
-    const y1 = centerY + radius * Math.sin(toRad(startAngle));
+    // SVG angles: 0°=right, 90°=down, 180°=left, 270°=up
+    // Convert degrees to radians
+    const toRad = (deg) => (deg * Math.PI) / 180;
     
-    // Calculate end point
-    const x2 = centerX + radius * Math.cos(toRad(endAngle));
-    const y2 = centerY + radius * Math.sin(toRad(endAngle));
+    // Build path using many small line segments (follows circle exactly)
+    const numSegments = Math.max(20, Math.floor(percentage * 50));
+    const totalAngle = percentage * 180;  // Max 180 degrees (half circle)
     
-    // Large arc flag: 1 if the arc spans more than 180°
-    const largeArc = percentage > 0.5 ? 1 : 0;
+    let pathData = '';
     
-    // Build SVG arc path
-    // M = move to start, A = arc (rx, ry, rotation, large-arc, sweep, end-x, end-y)
-    const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} ${sweepFlag} ${x2} ${y2}`;
+    for (let i = 0; i <= numSegments; i++) {
+        const progress = i / numSegments;
+        let angle;
+        
+        if (isRising) {
+            // LEFT side: start at bottom (90°), go toward top (270°) via left (180°)
+            angle = 90 + (progress * totalAngle);
+        } else {
+            // RIGHT side: start at top (270°), go toward bottom (450°/90°) via right (360°)
+            angle = 270 + (progress * totalAngle);
+        }
+        
+        const x = centerX + radius * Math.cos(toRad(angle));
+        const y = centerY + radius * Math.sin(toRad(angle));
+        
+        if (i === 0) {
+            pathData = `M ${x} ${y}`;
+        } else {
+            pathData += ` L ${x} ${y}`;
+        }
+    }
     
     arc.setAttribute('d', pathData);
     
     console.log(`Tide dial: ${isRising ? 'Rising' : 'Falling'} ${(percentage * 100).toFixed(1)}%`);
 }
-
-
 // Create tide chart using real NOAA data
 // REPLACE the existing createTideChart function in app.js with this complete version
 
@@ -1181,6 +1185,7 @@ function setWeatherPlaceholders() {
 }
 
 // Display weather data on the page
+// Display weather data on the page
 function displayWeather(weatherData) {
     if (!weatherData || !weatherData.data) {
         console.log('No weather data to display');
@@ -1200,8 +1205,18 @@ function displayWeather(weatherData) {
         }
     }
     
-    // Update wind speed and direction
+    // Update weather icon with emoji based on conditions
+    const weatherIconElement = document.getElementById('weather-icon');
+    if (weatherIconElement && weather.conditions) {
+        const emoji = getWeatherEmoji(weather.conditions);
+        weatherIconElement.textContent = emoji;
+        console.log(`🌤️ Weather icon updated: ${weather.conditions} → ${emoji}`);
+    }
+    
+    // Update wind speed and direction with rotation
     const windElement = document.getElementById('wind-speed');
+    const windArrowElement = document.getElementById('wind-arrow');
+    
     if (windElement) {
         if (weather.wind_speed && weather.wind_direction) {
             windElement.textContent = `${weather.wind_speed} ${weather.wind_direction}`;
@@ -1210,11 +1225,72 @@ function displayWeather(weatherData) {
         }
     }
     
-    // Update visibility
-    const visibilityElement = document.getElementById('visibility');
-    if (visibilityElement) {
-        visibilityElement.textContent = weather.visibility || '-- mi';
+    // Rotate wind arrow based on direction
+    if (windArrowElement && weather.wind_direction_degrees != null) {
+        windArrowElement.style.transform = `rotate(${weather.wind_direction_degrees}deg)`;
     }
+    
+    // Update visibility with animated droplet fill
+    const visibilityElement = document.getElementById('visibility');
+    const visibilityFill = document.getElementById('visibility-fill');
+    
+    if (visibilityElement && weather.visibility) {
+        visibilityElement.textContent = weather.visibility;
+        
+        // Animate the droplet fill based on visibility (0-10 miles)
+        if (visibilityFill) {
+            // Parse visibility value (e.g., "10.0 mi" -> 10.0)
+            const visMatch = weather.visibility.match(/(\d+\.?\d*)/);
+            const visValue = visMatch ? parseFloat(visMatch[0]) : 0;
+            
+            // Calculate percentage (0-10 miles = 0-100%)
+            const percentage = Math.min(Math.max(visValue / 10, 0), 1); // Clamp between 0 and 1
+            
+            // Fill from bottom to top (viewBox height is 120)
+            const fillHeight = percentage * 120;
+            const fillY = 120 - fillHeight;
+            
+            visibilityFill.setAttribute('y', fillY);
+            visibilityFill.setAttribute('height', fillHeight);
+            
+            console.log(`💧 Visibility: ${visValue} mi (${(percentage * 100).toFixed(0)}% fill)`);
+        }
+    } else if (visibilityElement) {
+        visibilityElement.textContent = '-- mi';
+        if (visibilityFill) {
+            visibilityFill.setAttribute('y', 120);
+            visibilityFill.setAttribute('height', 0);
+        }
+    }
+}
+
+// Map weather conditions to emoji icons
+function getWeatherEmoji(conditions) {
+    if (!conditions) return '☁️';
+    
+    const condition = conditions.toLowerCase();
+    
+    if (condition.includes('sunny') || condition.includes('clear')) {
+        return '☀️';
+    } else if (condition.includes('partly cloudy') || condition.includes('mostly sunny')) {
+        return '⛅';
+    } else if (condition.includes('mostly cloudy')) {
+        return '☁️';
+    } else if (condition.includes('cloudy') || condition.includes('overcast')) {
+        return '☁️';
+    } else if (condition.includes('rain') || condition.includes('shower') || condition.includes('drizzle')) {
+        return '🌧️';
+    } else if (condition.includes('storm') || condition.includes('thunder')) {
+        return '⛈️';
+    } else if (condition.includes('snow') || condition.includes('flurries')) {
+        return '❄️';
+    } else if (condition.includes('fog') || condition.includes('mist') || condition.includes('haze')) {
+        return '🌫️';
+    } else if (condition.includes('wind')) {
+        return '💨';
+    }
+    
+    return '☁️'; // default
 }
 
 // Load astronomy data from API
@@ -1307,10 +1383,13 @@ function displayAstronomy(astronomyData) {
         moonsetElement.textContent = astro.moonset || '--:--';
     }
     
-    // Update moon phase emoji
+    // Update moon phase icon
     const moonPhaseElement = document.getElementById('moon-phase');
-    if (moonPhaseElement && astro.moon_emoji) {
-        moonPhaseElement.textContent = astro.moon_emoji;
+    if (moonPhaseElement && astro.moon_phase) {
+        // Convert phase name to filename (e.g., "Waxing Crescent" -> "Waxing Crescent.svg")
+        const filename = `${astro.moon_phase}.svg`;
+        moonPhaseElement.src = `assets/${filename}`;
+        moonPhaseElement.alt = astro.moon_phase;
     }
     
     console.log('✅ Astronomy displayed:', astro.sunrise, astro.sunset, 'Moon:', astro.moon_phase, astro.moon_emoji);

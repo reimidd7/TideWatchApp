@@ -62,7 +62,18 @@ source venv/bin/activate
 
 # Install Python dependencies
 pip install --upgrade pip
-pip install -r requirements.txt
+
+# Check if requirements.txt exists in backend folder
+if [ -f "backend/requirements.txt" ]; then
+    pip install -r backend/requirements.txt
+elif [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt
+else
+    echo -e "${RED}❌ requirements.txt not found!${NC}"
+    echo "Looking in: $(pwd)"
+    ls -la
+    exit 1
+fi
 
 # Create systemd service for Flask backend
 echo -e "${GREEN}⚙️  Creating Flask backend service...${NC}"
@@ -218,7 +229,14 @@ tee ${INSTALL_DIR}/update.sh > /dev/null <<'EOF'
 cd /home/pi/tidewatch
 git pull origin main
 source venv/bin/activate
-pip install -r requirements.txt
+
+# Install dependencies from correct location
+if [ -f "backend/requirements.txt" ]; then
+    pip install -r backend/requirements.txt
+elif [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt
+fi
+
 sudo systemctl restart tidewatch-backend.service
 echo "✅ Update complete! App restarted."
 EOF

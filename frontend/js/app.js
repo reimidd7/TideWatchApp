@@ -1284,8 +1284,8 @@ function scaleToFit() {
     const container = document.querySelector('.container');
     if (!container) return;
     
-    const designWidth = 1920;
-    const designHeight = 1080;
+    const designWidth = 1024;
+    const designHeight = 600;
     
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;

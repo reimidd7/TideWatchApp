@@ -36,16 +36,23 @@ sudo apt-get install -y \
     vim \
     curl
 
-# Clone or update repository
-if [ -d "$INSTALL_DIR" ]; then
+# Check if already in tidewatch directory
+if [ "$(basename $(pwd))" == "tidewatch" ]; then
+    INSTALL_DIR=$(pwd)
+    echo -e "${GREEN}✅ Already in tidewatch directory${NC}"
+    git pull
+elif [ -d "$INSTALL_DIR" ]; then
     echo -e "${YELLOW}Directory exists, pulling latest changes...${NC}"
     cd "$INSTALL_DIR"
     git pull
 else
-    echo -e "${GREEN}📥 Cloning repository...${NC}"
-    read -p "Enter your GitHub repository URL: " REPO_URL
-    git clone "$REPO_URL" "$INSTALL_DIR"
-    cd "$INSTALL_DIR"
+    echo -e "${RED}❌ Directory not found at $INSTALL_DIR${NC}"
+    echo -e "${YELLOW}Please run these commands first:${NC}"
+    echo "  cd ~"
+    echo "  git clone YOUR_GITHUB_REPO_URL tidewatch"
+    echo "  cd tidewatch"
+    echo "  bash install.sh"
+    exit 1
 fi
 
 # Create Python virtual environment

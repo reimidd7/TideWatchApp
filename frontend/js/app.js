@@ -823,7 +823,7 @@ function createTideChart(predictions, currentLevel) {
     
     if (allTides.length < CHART.MIN_POINTS) {
         ctx.fillStyle = colors.textDim;
-        ctx.font = '16px sans-serif';
+        ctx.font = '18px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('Insufficient tide data', width / 2, height / 2);
         return;
@@ -918,7 +918,7 @@ function createTideChart(predictions, currentLevel) {
         ctx.fill();
         
         ctx.fillStyle = colors.text;
-        ctx.font = 'bold 16px sans-serif';
+        ctx.font = 'bold 18px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = pt.type === 'H' ? 'bottom' : 'top';
         const labelY = pt.type === 'H' ? pt.y + CHART.LABEL_OFFSET : pt.y - CHART.LABEL_OFFSET;
@@ -942,11 +942,11 @@ function createTideChart(predictions, currentLevel) {
     
     // Draw axes labels
     ctx.fillStyle = colors.textDim;
-    ctx.font = '12px sans-serif';
+    ctx.font = '18px sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (let h = minH; h <= maxH; h += CHART.GRID_STEP) {
-        ctx.fillText(h.toFixed(1), padding.left - 6, heightToY(h));
+        ctx.fillText(h.toFixed(1), padding.left - 8, heightToY(h));
     }
     
     ctx.textAlign = 'center';

@@ -879,17 +879,17 @@ body {
 
 .theme-toggle {
     position: fixed;
-    bottom: 70px;
-    left: 8px;
+    bottom: 60px;
+    left: 30px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.8rem;
     cursor: pointer;
     z-index: 1000;
     transition: all var(--transition-normal);
@@ -910,17 +910,17 @@ body {
 
 .info-button {
     position: fixed;
-    bottom: 70px;
-    left: 60px;
+    bottom: 60px;
+    left: 92px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.8rem;
     cursor: pointer;
     z-index: 1000;
     transition: all var(--transition-normal);
@@ -934,6 +934,51 @@ body {
 .info-button:active {
     transform: scale(0.95);
 }
+
+/* ============================================================================
+   MANUAL REFRESH BUTTON
+   ============================================================================ */
+
+.refresh-button {
+    position: fixed;
+    bottom: 60px;
+    left: 154px;
+    background: var(--color-card);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all var(--transition-normal);
+}
+
+.refresh-button:hover {
+    background: var(--color-turquoise);
+    transform: scale(1.05);
+}
+
+.refresh-button:active {
+    transform: scale(0.95);
+}
+
+.refresh-button.spinning {
+    animation: spin 1s linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 
 /* ============================================================================
    INFO MODAL
@@ -982,7 +1027,7 @@ body {
 }
 
 .info-modal-title {
-    font-size: 1.5rem;
+    font-size: 4rem;
     font-weight: 700;
     color: var(--color-accent);
     margin: 0;
@@ -992,7 +1037,7 @@ body {
 .info-modal-close {
     background: transparent;
     border: none;
-    font-size: 2rem;
+    font-size: 3rem;
     color: var(--color-text);
     cursor: pointer;
     width: 40px;
@@ -1011,7 +1056,7 @@ body {
 
 .info-modal-content {
     color: var(--color-text);
-    line-height: 1.6;
+    line-height: 2;
 }
 
 .info-section {
@@ -1019,7 +1064,7 @@ body {
 }
 
 .info-section-title {
-    font-size: 1.1rem;
+    font-size: 2rem;
     font-weight: 600;
     color: var(--color-accent);
     margin-bottom: 10px;
@@ -1054,7 +1099,7 @@ body {
 
 .info-description {
     color: var(--color-text-dim);
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     margin-top: 8px;
     line-height: 1.5;
     transition: color var(--transition-normal);
@@ -1080,49 +1125,6 @@ body {
     }
 }
 
-/* ============================================================================
-   MANUAL REFRESH BUTTON
-   ============================================================================ */
-
-.refresh-button {
-    position: fixed;
-    bottom: 70px;
-    left: 112px;
-    background: var(--color-card);
-    border: 2px solid var(--color-border);
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    cursor: pointer;
-    z-index: 1000;
-    transition: all var(--transition-normal);
-}
-
-.refresh-button:hover {
-    background: var(--color-turquoise);
-    transform: scale(1.05);
-}
-
-.refresh-button:active {
-    transform: scale(0.95);
-}
-
-.refresh-button.spinning {
-    animation: spin 1s linear;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
 
 /* ============================================================================
    RESPONSIVE ADJUSTMENTS

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TideWatch Touchscreen Simulator - 1024x600</title>
+    <title>TideWatch Touchscreen Simulator - 236mm×145mm (10.9")</title>
     <style>
         * {
             margin: 0;
@@ -212,16 +212,22 @@
                     <span class="info-value">1024 × 600</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Screen Size</span>
-                    <span class="info-value">10.1"</span>
+                    <span class="info-label">Physical Size</span>
+                    <span class="info-value">236mm × 145mm</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Screen Diagonal</span>
+                    <span class="info-value">10.9"</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Aspect Ratio</span>
-                    <span class="info-value">128:75</span>
+                    <span class="info-value">128:75 (1.707:1)</span>
                 </div>
             </div>
 
             <div class="scale-controls">
+                <button class="scale-btn" onclick="setScale('actual')">Actual Size</button>
+                <button class="scale-btn active" onclick="setScale('fit')">Fit Screen</button>
                 <button class="reload-btn" onclick="reloadApp()">🔄 Reload</button>
             </div>
         </div>
@@ -246,6 +252,15 @@
         const frame = document.getElementById('app-frame');
         const touchIndicator = document.getElementById('touch-indicator');
         const screenBezel = document.querySelector('.screen-bezel');
+        const wrapper = document.getElementById('simulator-wrapper');
+        
+        let currentScaleMode = 'fit';
+
+        // Physical dimensions of the actual touchscreen
+        const PHYSICAL_WIDTH_MM = 236;
+        const PHYSICAL_HEIGHT_MM = 145;
+        const PIXEL_WIDTH = 1024;
+        const PIXEL_HEIGHT = 600;
 
         // Touch simulation - show visual feedback on clicks
         screenBezel.addEventListener('mousedown', (e) => {
@@ -267,6 +282,48 @@
             frame.src = frame.src;
         }
 
+        // Scale mode switching
+        function setScale(mode) {
+            currentScaleMode = mode;
+            
+            // Update button states
+            document.querySelectorAll('.scale-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updateScale();
+        }
+
+        // Auto-scale based on window size or actual physical size
+        function updateScale() {
+            if (currentScaleMode === 'actual') {
+                // Display at actual physical size (236mm x 145mm)
+                // Note: This assumes monitor DPI is correctly reported to the browser
+                wrapper.style.transform = 'scale(1)';
+                
+                // Set actual physical dimensions
+                const screen = wrapper.querySelector('.screen');
+                screen.style.width = PHYSICAL_WIDTH_MM + 'mm';
+                screen.style.height = PHYSICAL_HEIGHT_MM + 'mm';
+            } else {
+                // Fit to screen mode
+                const screen = wrapper.querySelector('.screen');
+                screen.style.width = PIXEL_WIDTH + 'px';
+                screen.style.height = PIXEL_HEIGHT + 'px';
+                
+                const containerWidth = window.innerWidth - 40;
+                const deviceWidth = PIXEL_WIDTH + 70; // frame + bezel padding
+                
+                if (containerWidth < deviceWidth) {
+                    const scale = containerWidth / deviceWidth;
+                    wrapper.style.transform = `scale(${scale})`;
+                } else {
+                    wrapper.style.transform = 'scale(1)';
+                }
+            }
+        }
+
         // Keyboard shortcut for reload
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
@@ -275,25 +332,12 @@
             }
         });
 
-        // Auto-scale based on window size
-        function updateScale() {
-            const wrapper = document.getElementById('simulator-wrapper');
-            const containerWidth = window.innerWidth - 40;
-            const deviceWidth = 1024 + 70; // frame + bezel
-            
-            if (containerWidth < deviceWidth) {
-                const scale = containerWidth / deviceWidth;
-                wrapper.style.transform = `scale(${scale})`;
-            } else {
-                wrapper.style.transform = 'scale(1)';
-            }
-        }
-
         window.addEventListener('resize', updateScale);
         updateScale();
 
         console.log('🖥️ Touchscreen Simulator Ready!');
-        console.log('📐 Resolution: 1024x600 (10.1" display)');
+        console.log('📏 Physical Size: 236mm × 145mm (10.9" diagonal)');
+        console.log('📐 Resolution: 1024×600 pixels');
         console.log('⌨️ Press Ctrl+R to reload the app');
     </script>
 </body>

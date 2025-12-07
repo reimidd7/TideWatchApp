@@ -7,17 +7,7 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Theme Toggle Button -->
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">
-        🌙
-    </button>
-
-    <!-- Info Button -->
-    <button class="info-button" id="info-button" aria-label="Show information">
-        ℹ️
-    </button>
-
-    <!-- Info Modal -->
+    <!-- Info Modal - Stays outside container (fullscreen overlay) -->
     <div class="info-modal-overlay" id="info-modal-overlay">
         <div class="info-modal">
             <div class="info-modal-header">
@@ -90,14 +80,18 @@
             </div>
         </div>
     </div>
-    <!-- Manual Refresh Button -->
-    <button class="refresh-button" id="refresh-button" aria-label="Refresh all data">
-        🔄
-    </button>
 
-    <!-- Main Container -->
+    <!-- Main Container - ALL UI ELEMENTS INSIDE FOR PROPER SCALING -->
     <div id="app" class="container">
         
+        <!-- Dim Overlay - Inside container so it scales -->
+        <div id="dim-overlay"></div>
+
+        <!-- Control Buttons - Inside container so they scale -->
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">🌙</button>
+        <button class="info-button" id="info-button" aria-label="Show information">ℹ️</button>
+        <button class="refresh-button" id="refresh-button" aria-label="Refresh all data">🔄</button>
+
         <!-- Left Side Panel -->
         <aside class="side-panel">
             <h2 class="location-title" id="location-name">Maple Grove Beach</h2>
@@ -137,38 +131,22 @@
                             
                             <svg class="tide-dial" viewBox="0 0 240 240">
                                 <defs>
-                                    <!-- Gradient for falling tide (red at top to blue at bottom) - RIGHT side -->
                                     <linearGradient id="tideGradientFalling" x1="0%" y1="0%" x2="0%" y2="100%">
                                         <stop offset="0%" stop-color="#D95E5E" />
                                         <stop offset="100%" stop-color="#33C7FF" />
                                     </linearGradient>
-                                    
-                                    <!-- Gradient for rising tide (blue at bottom to red at top) - LEFT side -->
                                     <linearGradient id="tideGradientRising" x1="0%" y1="100%" x2="0%" y2="0%">
                                         <stop offset="0%" stop-color="#33C7FF" />
                                         <stop offset="100%" stop-color="#D95E5E" />
                                     </linearGradient>
                                 </defs>
                                 
-                                <!-- Background gray ring - THIS IS THE TRACK -->
                                 <circle cx="120" cy="120" r="80" fill="none" class="tide-ring-bg" stroke-width="14"/>
-                                
-                                <!-- High tide marker (top) -->
                                 <line x1="120" y1="33" x2="120" y2="47" stroke="#D95E5E" stroke-width="3" stroke-linecap="butt"/>
-
-                                <!-- Low tide marker (bottom) -->
                                 <line x1="120" y1="193" x2="120" y2="207" stroke="#33C7FF" stroke-width="3" stroke-linecap="butt"/>
-                                
-                                <!-- Tide level arc - drawn via JS -->
                                 <path id="tide-arc" d="" fill="none" stroke-width="14" stroke-linecap="butt"/>
-                                
-                                <!-- Inner circle -->
                                 <circle cx="120" cy="120" r="72" class="tide-inner-circle" stroke-width="1"/>
-                                
-                                <!-- Rising label (left) -->
                                 <text x="18" y="123" text-anchor="middle" font-size="8" class="tide-side-label">rising</text>
-                                
-                                <!-- Falling label (right) -->
                                 <text x="224" y="123" text-anchor="middle" font-size="8" class="tide-side-label falling">falling</text>
                             </svg>
                             
@@ -221,32 +199,18 @@
                             <div class="visibility-display">
                                 <svg class="visibility-droplet" viewBox="0 0 100 120" id="visibility-droplet">
                                     <defs>
-                                        <!-- Define the simple droplet shape as a clip path -->
                                         <clipPath id="dropletClip">
-                                            <!-- Triangle with rounded top -->
                                             <path d="M 50,110 L 20,30 Q 20,10 35,10 L 65,10 Q 80,10 80,30 Z" />
                                         </clipPath>
                                     </defs>
-                                    
-                                    <!-- Droplet outline (stroke only) -->
                                     <path class="droplet-outline" 
                                         d="M 50,110 L 20,30 Q 20,10 35,10 L 65,10 Q 80,10 80,30 Z" 
                                         fill="none" 
                                         stroke="currentColor" 
                                         stroke-width="3"/>
-                                    
-                                    <!-- Fill container (clipped to droplet shape) -->
                                     <g clip-path="url(#dropletClip)">
-                                        <!-- Background (empty state) -->
                                         <rect x="0" y="0" width="100" height="120" fill="var(--color-border)" opacity="0.2"/>
-                                        
-                                        <!-- Fill level (animated) -->
-                                        <rect id="visibility-fill" 
-                                            x="0" 
-                                            y="120" 
-                                            width="100" 
-                                            height="0" 
-                                            fill="var(--color-turquoise)"/>
+                                        <rect id="visibility-fill" x="0" y="120" width="100" height="0" fill="var(--color-turquoise)"/>
                                     </g>
                                 </svg>
                                 <div class="visibility-value" id="visibility">10 mi</div>
@@ -256,7 +220,6 @@
 
                     <!-- Astronomy Section -->
                     <div class="astronomy-section">
-                
                         <!-- Moon -->
                         <div class="astro-card">
                             <img src="assets/New Moon.svg" alt="Moon Phase" class="moon-phase-icon" id="moon-phase">
@@ -305,9 +268,7 @@
                     <!-- View 2: 7-Day Table -->
                     <div class="swipe-panel" id="table-view">
                         <h3>7-Day Tide Table</h3>
-                        <div class="tide-table" id="tide-table">
-                            <!-- Table will be populated by JavaScript -->
-                        </div>
+                        <div class="tide-table" id="tide-table"></div>
                     </div>
                 </div>
                 
@@ -320,7 +281,7 @@
 
         </main>
 
-        <!-- Status Bar -->
+        <!-- Status Bar - Inside container so it scales -->
         <footer class="status-bar">
             <span id="connection-status">🟢 Connected</span>
             <span id="network-status">📡 Network OK</span>

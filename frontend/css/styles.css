@@ -1,6 +1,6 @@
 /**
  * TideWatch Styles
- * Optimized for 1024x600 10.1" Touchscreen
+ * Optimized for 1024x600 10.1" Touchscreen (236mm x 145mm)
  */
 
 /* ============================================================================
@@ -92,7 +92,7 @@ body {
     display: flex;
     height: 600px;
     width: 1024px;
-    padding-bottom: 32px;
+    padding-bottom: 36px;
     transform-origin: center center;
     position: relative;
 }
@@ -825,11 +825,11 @@ body {
 }
 
 /* ============================================================================
-   STATUS BAR
+   STATUS BAR - NOW ABSOLUTE WITHIN CONTAINER
    ============================================================================ */
 
 .status-bar {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
@@ -874,22 +874,22 @@ body {
 }
 
 /* ============================================================================
-   THEME TOGGLE BUTTON
+   THEME TOGGLE BUTTON - NOW ABSOLUTE WITHIN CONTAINER
    ============================================================================ */
 
 .theme-toggle {
-    position: fixed;
-    bottom: 60px;
-    left: 30px;
+    position: absolute;
+    bottom: 46px;
+    left: 10px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 52px;
-    height: 52px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     cursor: pointer;
     z-index: 1000;
     transition: all var(--transition-normal);
@@ -905,22 +905,22 @@ body {
 }
 
 /* ============================================================================
-   INFO BUTTON
+   INFO BUTTON - NOW ABSOLUTE WITHIN CONTAINER
    ============================================================================ */
 
 .info-button {
-    position: fixed;
-    bottom: 60px;
-    left: 92px;
+    position: absolute;
+    bottom: 46px;
+    left: 60px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 52px;
-    height: 52px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     cursor: pointer;
     z-index: 1000;
     transition: all var(--transition-normal);
@@ -936,22 +936,22 @@ body {
 }
 
 /* ============================================================================
-   MANUAL REFRESH BUTTON
+   MANUAL REFRESH BUTTON - NOW ABSOLUTE WITHIN CONTAINER
    ============================================================================ */
 
 .refresh-button {
-    position: fixed;
-    bottom: 60px;
-    left: 154px;
+    position: absolute;
+    bottom: 46px;
+    left: 110px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 52px;
-    height: 52px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     cursor: pointer;
     z-index: 1000;
     transition: all var(--transition-normal);
@@ -979,9 +979,24 @@ body {
     }
 }
 
+/* ============================================================================
+   DIM OVERLAY - ABSOLUTE WITHIN CONTAINER
+   ============================================================================ */
+
+#dim-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    pointer-events: none;
+    transition: background 1s ease;
+    z-index: 9999;
+}
 
 /* ============================================================================
-   INFO MODAL
+   INFO MODAL - STAYS FIXED (FULLSCREEN OVERLAY)
    ============================================================================ */
 
 .info-modal-overlay {
@@ -1007,9 +1022,9 @@ body {
     border: 3px solid var(--color-accent);
     border-radius: 12px;
     padding: 24px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
+    max-width: 500px;
+    width: 85%;
+    max-height: 70vh;
     overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     animation: slideUp 0.3s ease;
@@ -1027,7 +1042,7 @@ body {
 }
 
 .info-modal-title {
-    font-size: 4rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-accent);
     margin: 0;
@@ -1037,7 +1052,7 @@ body {
 .info-modal-close {
     background: transparent;
     border: none;
-    font-size: 3rem;
+    font-size: 2rem;
     color: var(--color-text);
     cursor: pointer;
     width: 40px;
@@ -1056,7 +1071,7 @@ body {
 
 .info-modal-content {
     color: var(--color-text);
-    line-height: 2;
+    line-height: 1.6;
 }
 
 .info-section {
@@ -1064,7 +1079,7 @@ body {
 }
 
 .info-section-title {
-    font-size: 2rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--color-accent);
     margin-bottom: 10px;
@@ -1099,7 +1114,7 @@ body {
 
 .info-description {
     color: var(--color-text-dim);
-    font-size: 1.2rem;
+    font-size: 0.85rem;
     margin-top: 8px;
     line-height: 1.5;
     transition: color var(--transition-normal);
@@ -1124,7 +1139,6 @@ body {
         opacity: 1;
     }
 }
-
 
 /* ============================================================================
    RESPONSIVE ADJUSTMENTS
@@ -1159,16 +1173,12 @@ body {
         cursor: pointer;
     }
     
-    .theme-toggle {
-        width: 46px;
-        height: 46px;
-        font-size: 1.3rem;
-    }
-    
-    .info-button {
-        width: 46px;
-        height: 46px;
-        font-size: 1.3rem;
+    .theme-toggle,
+    .info-button,
+    .refresh-button {
+        width: 48px;
+        height: 48px;
+        font-size: 1.6rem;
     }
     
     .info-modal-close {
@@ -1178,6 +1188,6 @@ body {
     }
     
     .info-modal {
-        padding: 30px;
+        padding: 20px;
     }
 }

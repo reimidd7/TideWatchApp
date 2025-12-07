@@ -10,12 +10,12 @@
 const API_BASE = window.location.origin;
 
 const REFRESH_INTERVALS = {
-    TIDE: 360000,      // 6 minutes
-    WEATHER: 600000,   // 10 minutes
-    ASTRONOMY: 43200000, // 12 hours
-    COUNTDOWN: 30000,  // 30 seconds
-    CLOCK: 1000,       // 1 second
-    NETWORK_CHECK: 60000 // 1 minute
+    TIDE: 360000,
+    WEATHER: 600000,
+    ASTRONOMY: 43200000,
+    COUNTDOWN: 30000,
+    CLOCK: 1000,
+    NETWORK_CHECK: 60000
 };
 
 const SWIPE_THRESHOLD = 50;
@@ -62,6 +62,11 @@ const WEATHER_EMOJI = {
     default: '☁️'
 };
 
+const DIMMING = {
+    TIMEOUT: 300000,
+    FADE_DURATION: 1000
+};
+
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
@@ -85,6 +90,89 @@ const dialSwipeState = {
     isDragging: false
 };
 
+let currentScale = 1;
+let dimTimer = null;
+let isDimmed = false;
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🌊 TideWatch initializing...');
+    
+    initTheme();
+    initDimming();
+    setupEventListeners();
+    setPlaceholders();
+    initApp();
+});
+
+function setupEventListeners() {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+    
+    const infoButton = document.getElementById('info-button');
+    const infoModalOverlay = document.getElementById('info-modal-overlay');
+    const infoModalClose = document.getElementById('info-modal-close');
+    
+    if (infoButton) {
+        infoButton.addEventListener('click', openInfoModal);
+    }
+    
+    if (infoModalClose) {
+        infoModalClose.addEventListener('click', closeInfoModal);
+    }
+    
+    if (infoModalOverlay) {
+        infoModalOverlay.addEventListener('click', (e) => {
+            if (e.target === infoModalOverlay) {
+                closeInfoModal();
+            }
+        });
+    }
+    
+    const refreshButton = document.getElementById('refresh-button');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', manualRefresh);
+    }
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeInfoModal();
+        }
+    });
+}
+
+async function initApp() {
+    updateClock();
+    setInterval(updateClock, REFRESH_INTERVALS.CLOCK);
+    
+    await loadConfig();
+    await checkHealth();
+    await checkNetworkConnectivity();
+    
+    initSwipe();
+    startCountdownTimer();
+    
+    await Promise.all([
+        loadWeatherData(),
+        loadAstronomyData(),
+        loadTideData()
+    ]);
+    
+    setInterval(loadTideData, REFRESH_INTERVALS.TIDE);
+    setInterval(loadAstronomyData, REFRESH_INTERVALS.ASTRONOMY);
+    setInterval(loadWeatherData, REFRESH_INTERVALS.WEATHER);
+    setInterval(checkNetworkConnectivity, REFRESH_INTERVALS.NETWORK_CHECK);
+    
+    scheduleMidnightRefresh();
+    
+    console.log('✅ TideWatch ready!');
+}
+
 // ============================================================================
 // THEME MANAGEMENT
 // ============================================================================
@@ -102,7 +190,6 @@ function toggleTheme() {
     localStorage.setItem('tidewatch-theme', state.theme);
     updateThemeIcon();
     
-    // Redraw visualizations with new theme
     if (state.tideData?.predictions) {
         createTideChart(state.tideData.predictions, state.tideData.current);
     }
@@ -119,16 +206,123 @@ function updateThemeIcon() {
 }
 
 // ============================================================================
+// AUTO-SCALING FOR FULLSCREEN
+// ============================================================================
+
+function scaleToFit() {
+    const container = document.querySelector('.container');
+    if (!container) return;
+    
+    const designWidth = 1024;
+    const designHeight = 600;
+    
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    const scaleX = windowWidth / designWidth;
+    const scaleY = windowHeight / designHeight;
+    const scale = Math.min(scaleX, scaleY);
+    
+    currentScale = scale;
+    
+    container.style.transform = `scale(${scale})`;
+    
+    // Scale modal to match
+    const modal = document.querySelector('.info-modal');
+    if (modal) {
+        modal.style.transform = `scale(${scale})`;
+        modal.style.transformOrigin = 'center center';
+    }
+    
+    console.log(`📐 Scaled to ${(scale * 100).toFixed(1)}% (${windowWidth}x${windowHeight} viewport)`);
+    
+    setTimeout(() => {
+        if (typeof createTideChart === 'function' && state?.tideData?.predictions) {
+            createTideChart(state.tideData.predictions, state.tideData.current);
+        }
+    }, 100);
+}
+
+function getScreenInfo() {
+    const physicalWidth = 236;
+    const physicalHeight = 145;
+    
+    const screenWidthPx = window.screen.width;
+    const screenHeightPx = window.screen.height;
+    
+    const ppiX = screenWidthPx / (physicalWidth / 25.4);
+    const ppiY = screenHeightPx / (physicalHeight / 25.4);
+    
+    console.log(`📺 Screen: ${screenWidthPx}x${screenHeightPx}px`);
+    console.log(`📏 Physical: ${physicalWidth}x${physicalHeight}mm`);
+    console.log(`🔍 PPI: ${ppiX.toFixed(0)} x ${ppiY.toFixed(0)}`);
+    
+    return { ppiX, ppiY, screenWidthPx, screenHeightPx };
+}
+
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(scaleToFit, 100);
+});
+
+window.addEventListener('load', () => {
+    getScreenInfo();
+    setTimeout(scaleToFit, 100);
+});
+
+// ============================================================================
+// SCREEN DIMMING - NOW USES ELEMENT INSIDE CONTAINER
+// ============================================================================
+
+function initDimming() {
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => {
+        document.addEventListener(event, resetDimTimer, { passive: true });
+    });
+    
+    resetDimTimer();
+    console.log('🌙 Screen dimming initialized (5 min timeout)');
+}
+
+function dimScreen() {
+    const overlay = document.getElementById('dim-overlay');
+    if (overlay && !isDimmed) {
+        overlay.style.background = 'rgba(0, 0, 0, 0.7)';
+        isDimmed = true;
+        console.log('🌙 Screen dimmed');
+    }
+}
+
+function brightenScreen() {
+    const overlay = document.getElementById('dim-overlay');
+    if (overlay && isDimmed) {
+        overlay.style.background = 'rgba(0, 0, 0, 0)';
+        isDimmed = false;
+        console.log('☀️ Screen brightened');
+    }
+}
+
+function resetDimTimer() {
+    brightenScreen();
+    
+    if (dimTimer) {
+        clearTimeout(dimTimer);
+    }
+    
+    dimTimer = setTimeout(dimScreen, DIMMING.TIMEOUT);
+}
+
+// ============================================================================
 // NETWORK CONNECTIVITY CHECK
 // ============================================================================
 
 async function checkNetworkConnectivity() {
     try {
-        // Try to reach a reliable external endpoint
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         
-        const response = await fetch('https://www.google.com/favicon.ico', {
+        await fetch('https://www.google.com/favicon.ico', {
             method: 'HEAD',
             mode: 'no-cors',
             cache: 'no-cache',
@@ -167,14 +361,12 @@ function updateNetworkStatus(isOnline) {
 async function manualRefresh() {
     const refreshButton = document.getElementById('refresh-button');
     
-    // Add spinning animation
     if (refreshButton) {
         refreshButton.classList.add('spinning');
     }
     
     console.log('🔄 Manual refresh triggered');
     
-    // Check network first
     const networkOk = await checkNetworkConnectivity();
     
     if (!networkOk) {
@@ -185,7 +377,6 @@ async function manualRefresh() {
         return;
     }
     
-    // Reload all data
     await Promise.all([
         loadConfig(),
         loadWeatherData(),
@@ -193,88 +384,11 @@ async function manualRefresh() {
         loadTideData()
     ]);
     
-    // Remove spinning animation after data loads
     if (refreshButton) {
         setTimeout(() => refreshButton.classList.remove('spinning'), 1000);
     }
     
     console.log('✅ Manual refresh complete');
-}
-
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🌊 TideWatch initializing...');
-    
-    initTheme();
-    setupEventListeners();
-    setPlaceholders();
-    initApp();
-});
-
-function setupEventListeners() {
-    const themeToggle = document.getElementById('theme-toggle');
-    if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-    }
-    
-    const infoButton = document.getElementById('info-button');
-    const infoModalOverlay = document.getElementById('info-modal-overlay');
-    const infoModalClose = document.getElementById('info-modal-close');
-    
-    if (infoButton) {
-        infoButton.addEventListener('click', openInfoModal);
-    }
-    
-    if (infoModalClose) {
-        infoModalClose.addEventListener('click', closeInfoModal);
-    }
-    
-    if (infoModalOverlay) {
-        // Close when clicking outside the modal
-        infoModalOverlay.addEventListener('click', (e) => {
-            if (e.target === infoModalOverlay) {
-                closeInfoModal();
-            }
-        });
-    }
-    
-    // Close modal with Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeInfoModal();
-        }
-    });
-}
-
-async function initApp() {
-    updateClock();
-    setInterval(updateClock, REFRESH_INTERVALS.CLOCK);
-    
-    await loadConfig();
-    await checkHealth();
-    await checkNetworkConnectivity();
-    
-    initSwipe();
-    startCountdownTimer();
-    
-    await Promise.all([
-        loadWeatherData(),
-        loadAstronomyData(),
-        loadTideData()
-    ]);
-    
-    // Set up refresh intervals
-    setInterval(loadTideData, REFRESH_INTERVALS.TIDE);
-    setInterval(loadAstronomyData, REFRESH_INTERVALS.ASTRONOMY);
-    setInterval(loadWeatherData, REFRESH_INTERVALS.WEATHER);
-    setInterval(checkNetworkConnectivity, REFRESH_INTERVALS.NETWORK_CHECK);
-    
-    scheduleMidnightRefresh();
-    
-    console.log('✅ TideWatch ready!');
 }
 
 // ============================================================================
@@ -450,16 +564,11 @@ async function loadAstronomyData() {
     }
 }
 
-/**
- * Display functions, visualizations, and user interactions
- */
-
 // ============================================================================
 // PLACEHOLDER FUNCTIONS
 // ============================================================================
 
 function setPlaceholders() {
-    // Tide placeholders
     updateElement('current-height', '--.- ft');
     updateElement('next-high', ' --:--');
     updateElement('next-low', ' --:--');
@@ -471,12 +580,10 @@ function setPlaceholders() {
     updateElement('next-tide-height', '--.- ft');
     updateElement('next-tide-countdown', 'in --h --m');
     
-    // Weather placeholders
     updateElement('weather-temp', '--°F');
     updateElement('wind-speed', '-- mph');
     updateElement('visibility', '-- mi');
     
-    // Astronomy placeholders
     updateElement('sunrise', '--:--');
     updateElement('sunset', '--:--');
     updateElement('moon-rise', '--:--');
@@ -486,16 +593,14 @@ function setPlaceholders() {
 }
 
 function setTidePlaceholders() {
-    setPlaceholders(); // Reuse main placeholder function
+    setPlaceholders();
     
-    // Clear chart
     const canvas = document.getElementById('tide-chart');
     if (canvas) {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     
-    // Clear table
     const tableDiv = document.getElementById('tide-table');
     if (tableDiv) {
         tableDiv.innerHTML = '<p style="text-align: center; padding: 2rem;">No tide data available</p>';
@@ -525,13 +630,11 @@ function displayTideData(tideData) {
         return;
     }
     
-    // Current height
     const heightText = tideData.current?.height != null 
         ? `${tideData.current.height} ft` 
         : '--.- ft';
     updateElement('current-height', heightText);
     
-    // Next high tide
     if (tideData.next_high) {
         const highTime = tideData.next_high.time_12hr || formatTime(tideData.next_high.time);
         updateElement('next-high', highTime);
@@ -541,7 +644,6 @@ function displayTideData(tideData) {
         updateElement('high-time-display', '--:--');
     }
     
-    // Next low tide
     if (tideData.next_low) {
         const lowTime = tideData.next_low.time_12hr || formatTime(tideData.next_low.time);
         updateElement('next-low', lowTime);
@@ -551,12 +653,10 @@ function displayTideData(tideData) {
         updateElement('low-time-display', '--:--');
     }
     
-    // Display today's high/low in dial center
     if (tideData.predictions?.length > 0) {
         displayTodaysHighLow(tideData.predictions);
     }
     
-    // Tide status and dial
     if (tideData.status?.has_predictions !== false) {
         updateTideDial(tideData.status.percentage, tideData.status.is_rising);
     } else {
@@ -564,13 +664,11 @@ function displayTideData(tideData) {
         if (arc) arc.setAttribute('d', '');
     }
     
-    // Create visualizations
     if (tideData.predictions?.length > 0) {
         createTideChart(tideData.predictions, tideData.current);
         createTideTable(tideData.predictions);
     }
     
-    // Update next tide display
     updateNextTideDisplay(tideData);
     
     console.log('✅ Tide data displayed');
@@ -587,7 +685,6 @@ function displayTodaysHighLow(predictions) {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart.getTime() + 86400000);
     
-    // Filter today's predictions
     const todaysPredictions = predictions.filter(pred => {
         const predTime = new Date(pred.time);
         return predTime >= todayStart && predTime < todayEnd;
@@ -599,7 +696,6 @@ function displayTodaysHighLow(predictions) {
         return;
     }
     
-    // Find highest high and lowest low
     const highs = todaysPredictions.filter(p => p.type === 'H');
     const lows = todaysPredictions.filter(p => p.type === 'L');
     
@@ -628,7 +724,6 @@ function updateNextTideDisplay(tideData) {
     let nextTide = null;
     let tideType = '';
     
-    // Determine next tide based on status
     if (tideData.status?.has_predictions !== false) {
         if (tideData.status.is_rising && tideData.next_high) {
             nextTide = tideData.next_high;
@@ -641,7 +736,6 @@ function updateNextTideDisplay(tideData) {
         }
     }
     
-    // Fallback: use whichever is sooner
     if (!nextTide && tideData.next_high && tideData.next_low) {
         const now = new Date();
         const highTime = new Date(tideData.next_high.time);
@@ -658,7 +752,6 @@ function updateNextTideDisplay(tideData) {
         }
     }
     
-    // Update display
     if (nextTide) {
         typeElement.textContent = tideType;
         heightElement.textContent = `${nextTide.height} ft`;
@@ -716,7 +809,6 @@ function updateTideDial(percentage, isRising) {
     
     percentage = Math.max(0, Math.min(1, percentage));
     
-    // Set gradient based on direction
     arc.setAttribute('stroke', isRising 
         ? 'url(#tideGradientRising)' 
         : 'url(#tideGradientFalling)');
@@ -747,11 +839,6 @@ function updateTideDial(percentage, isRising) {
     console.log(`Tide dial: ${isRising ? 'Rising' : 'Falling'} ${(percentage * 100).toFixed(1)}%`);
 }
 
-/**
- * Chart creation, table generation, weather/astronomy display, and swipe interactions
- * (Remaining functions unchanged from original app.js - continuing with createTideChart, etc.)
- */
-
 // ============================================================================
 // TIDE CHART VISUALIZATION
 // ============================================================================
@@ -763,10 +850,8 @@ function createTideChart(predictions, currentLevel) {
     const container = canvas.parentElement;
     const ctx = canvas.getContext('2d');
     
-    // Setup canvas with device pixel ratio
-    const rect = container.getBoundingClientRect();
-    const width = Math.floor(rect.width) || 700;
-    const height = Math.floor(rect.height) || 180;
+    const width = container.offsetWidth || 700;
+    const height = container.offsetHeight || 180;
     const dpr = window.devicePixelRatio || 1;
     
     canvas.width = width * dpr;
@@ -780,7 +865,6 @@ function createTideChart(predictions, currentLevel) {
     const chartW = width - padding.left - padding.right;
     const chartH = height - padding.top - padding.bottom;
     
-    // Get theme colors
     const colors = {
         accent: getCSSVar('--color-accent'),
         highTide: getCSSVar('--color-high-tide'),
@@ -791,7 +875,6 @@ function createTideChart(predictions, currentLevel) {
         turquoise: getCSSVar('--color-turquoise')
     };
     
-    // Prepare data
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart.getTime() + 86400000);
@@ -811,7 +894,6 @@ function createTideChart(predictions, currentLevel) {
     const todayTides = filterByRange(todayStart, todayEnd);
     const tomorrowTides = filterByRange(todayEnd, tomorrowEnd);
     
-    // Build tide array
     const allTides = [];
     if (yesterdayTides.length > 0) {
         allTides.push({ ...yesterdayTides[yesterdayTides.length - 1], isToday: false });
@@ -823,13 +905,12 @@ function createTideChart(predictions, currentLevel) {
     
     if (allTides.length < CHART.MIN_POINTS) {
         ctx.fillStyle = colors.textDim;
-        ctx.font = '18px sans-serif';
+        ctx.font = '14px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('Insufficient tide data', width / 2, height / 2);
         return;
     }
     
-    // Calculate scales
     const heights = allTides.map(p => p.height);
     const minH = Math.floor(Math.min(...heights) - 1);
     const maxH = Math.ceil(Math.max(...heights) + 1);
@@ -838,7 +919,6 @@ function createTideChart(predictions, currentLevel) {
     const hoursToX = (hrs) => padding.left + (hrs / 24) * chartW;
     const heightToY = (h) => padding.top + (1 - (h - minH) / hRange) * chartH;
     
-    // Convert to coordinates
     const points = allTides.map(p => {
         const t = new Date(p.time);
         const hoursSinceMidnight = (t - todayStart) / 3600000;
@@ -851,7 +931,6 @@ function createTideChart(predictions, currentLevel) {
         };
     });
     
-    // Draw grid
     ctx.strokeStyle = hexToRgba(colors.border, 0.2);
     ctx.lineWidth = 1;
     for (let h = minH; h <= maxH; h += CHART.GRID_STEP) {
@@ -862,7 +941,6 @@ function createTideChart(predictions, currentLevel) {
         ctx.stroke();
     }
     
-    // Generate smooth curve using Catmull-Rom spline
     function catmullRom(p0, p1, p2, p3, t) {
         const t2 = t * t;
         const t3 = t2 * t;
@@ -890,13 +968,11 @@ function createTideChart(predictions, currentLevel) {
     }
     curvePoints.push(points[points.length - 1]);
     
-    // Clip to chart area
     ctx.save();
     ctx.beginPath();
     ctx.rect(padding.left, padding.top, chartW, chartH);
     ctx.clip();
     
-    // Draw curve
     ctx.beginPath();
     ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
     for (let i = 1; i < curvePoints.length; i++) {
@@ -908,7 +984,6 @@ function createTideChart(predictions, currentLevel) {
     ctx.lineJoin = 'round';
     ctx.stroke();
     
-    // Draw points and labels (today's tides only)
     points.forEach(pt => {
         if (!pt.isToday) return;
         
@@ -918,14 +993,13 @@ function createTideChart(predictions, currentLevel) {
         ctx.fill();
         
         ctx.fillStyle = colors.text;
-        ctx.font = 'bold 18px sans-serif';
+        ctx.font = 'bold 16px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = pt.type === 'H' ? 'bottom' : 'top';
         const labelY = pt.type === 'H' ? pt.y + CHART.LABEL_OFFSET : pt.y - CHART.LABEL_OFFSET;
         ctx.fillText(pt.height.toFixed(2), pt.x, labelY);
     });
     
-    // Draw current time line
     const currentHours = now.getHours() + now.getMinutes() / 60;
     const currentX = hoursToX(currentHours);
     
@@ -940,9 +1014,8 @@ function createTideChart(predictions, currentLevel) {
     
     ctx.restore();
     
-    // Draw axes labels
     ctx.fillStyle = colors.textDim;
-    ctx.font = '18px sans-serif';
+    ctx.font = '12px sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (let h = minH; h <= maxH; h += CHART.GRID_STEP) {
@@ -968,7 +1041,6 @@ function createTideTable(predictions) {
     const tableDiv = document.getElementById('tide-table');
     if (!tableDiv) return;
     
-    // Group by day
     const dayGroups = {};
     predictions.forEach(pred => {
         const predDate = new Date(pred.time);
@@ -980,12 +1052,10 @@ function createTideTable(predictions) {
         dayGroups[dateKey].tides.push(pred);
     });
     
-    // Sort tides within each day
     Object.values(dayGroups).forEach(day => {
         day.tides.sort((a, b) => new Date(a.time) - new Date(b.time));
     });
     
-    // Build table HTML
     let html = `
         <table class="enhanced-tide-table">
             <thead>
@@ -1070,32 +1140,27 @@ function displayWeather(weatherData) {
     
     const weather = weatherData.data;
     
-    // Temperature
     const tempText = weather.temperature != null 
         ? `${weather.temperature}°${weather.temperature_unit || 'F'}` 
         : '--°F';
     updateElement('weather-temp', tempText);
     
-    // Weather icon
     const weatherIconElement = document.getElementById('weather-icon');
     if (weatherIconElement && weather.conditions) {
         const emoji = getWeatherEmoji(weather.conditions);
         weatherIconElement.textContent = emoji;
     }
     
-    // Wind
     const windText = weather.wind_speed && weather.wind_direction
         ? `${weather.wind_speed} ${weather.wind_direction}`
         : '-- mph';
     updateElement('wind-speed', windText);
     
-    // Rotate wind arrow
     const windArrowElement = document.getElementById('wind-arrow');
     if (windArrowElement && weather.wind_direction_degrees != null) {
         windArrowElement.style.transform = `rotate(${weather.wind_direction_degrees}deg)`;
     }
     
-    // Visibility
     updateElement('visibility', weather.visibility || '-- mi');
     
     const visibilityFill = document.getElementById('visibility-fill');
@@ -1142,7 +1207,6 @@ function displayAstronomy(astronomyData) {
     updateElement('moon-rise', astro.moonrise || '--:--');
     updateElement('moon-set', astro.moonset || '--:--');
     
-    // Moon phase icon
     const moonPhaseElement = document.getElementById('moon-phase');
     if (moonPhaseElement && astro.moon_phase) {
         const filename = `${astro.moon_phase}.svg`;
@@ -1239,7 +1303,6 @@ function closeInfoModal() {
 }
 
 function populateInfoModal() {
-    // Location info
     if (state.config?.location) {
         const loc = state.config.location;
         updateElement('info-location-name', loc.name || 'Unknown');
@@ -1247,7 +1310,6 @@ function populateInfoModal() {
             `${loc.latitude?.toFixed(4)}°, ${loc.longitude?.toFixed(4)}°`);
     }
     
-    // Tide station info
     if (state.config?.location?.station_id) {
         const stationId = state.config.location.station_id;
         const obsStation = state.config.location.observation_station;
@@ -1260,7 +1322,6 @@ function populateInfoModal() {
         }
     }
     
-    // Last update time
     if (state.lastUpdate) {
         const timeStr = state.lastUpdate.toLocaleTimeString('en-US', {
             hour: '2-digit',
@@ -1277,136 +1338,6 @@ function populateInfoModal() {
 }
 
 // ============================================================================
-// AUTO-SCALING FOR FULLSCREEN
-// ============================================================================
-
-function scaleToFit() {
-    const container = document.querySelector('.container');
-    if (!container) return;
-    
-    const designWidth = 1024;
-    const designHeight = 600;
-    
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-    
-    const scaleX = windowWidth / designWidth;
-    const scaleY = windowHeight / designHeight;
-    const scale = Math.min(scaleX, scaleY);
-    
-    container.style.transform = `scale(${scale})`;
-    
-    console.log(`🔍 Scaled to ${(scale * 100).toFixed(1)}% (${windowWidth}x${windowHeight} viewport)`);
-    
-    // Redraw chart after scaling to ensure proper sizing
-    setTimeout(() => {
-        if (typeof createTideChart === 'function' && state?.tideData?.predictions) {
-            createTideChart(state.tideData.predictions, state.tideData.current);
-        }
-    }, 100);
-}
-
-// Scale on load and on resize (debounced)
-let resizeTimeout;
-window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(scaleToFit, 100);
-});
-
-// Initial scale after everything loads
-window.addEventListener('load', () => {
-    setTimeout(scaleToFit, 500);
-});
-
-// ============================================================================
-// SCREEN DIMMING
-// ============================================================================
-
-const DIMMING = {
-    TIMEOUT: 300000,  // 5 minutes in milliseconds
-    FADE_DURATION: 1000  // 1 second fade
-};
-
-let dimTimer = null;
-let isDimmed = false;
-
-function createDimOverlay() {
-    // Create overlay element
-    const overlay = document.createElement('div');
-    overlay.id = 'dim-overlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0);
-        pointer-events: none;
-        transition: background ${DIMMING.FADE_DURATION}ms ease;
-        z-index: 9999;
-    `;
-    document.body.appendChild(overlay);
-    return overlay;
-}
-
-function dimScreen() {
-    const overlay = document.getElementById('dim-overlay');
-    if (overlay && !isDimmed) {
-        overlay.style.background = 'rgba(0, 0, 0, 0.7)';
-        isDimmed = true;
-        console.log('🌙 Screen dimmed');
-    }
-}
-
-function brightenScreen() {
-    const overlay = document.getElementById('dim-overlay');
-    if (overlay && isDimmed) {
-        overlay.style.background = 'rgba(0, 0, 0, 0)';
-        isDimmed = false;
-        console.log('☀️ Screen brightened');
-    }
-}
-
-function resetDimTimer() {
-    brightenScreen();
-    
-    if (dimTimer) {
-        clearTimeout(dimTimer);
-    }
-    
-    dimTimer = setTimeout(dimScreen, DIMMING.TIMEOUT);
-}
-
-function initDimming() {
-    // Create overlay
-    createDimOverlay();
-    
-    // Listen for user activity
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    events.forEach(event => {
-        document.addEventListener(event, resetDimTimer, { passive: true });
-    });
-    
-    // Start timer
-    resetDimTimer();
-    
-    console.log('🌙 Screen dimming initialized (5 min timeout)');
-}
-
-// Initialize dimming when page loads
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDimming);
-} else {
-    initDimming();
-}
-
-// Update exports
-window.TideWatch.dimScreen = dimScreen;
-window.TideWatch.brightenScreen = brightenScreen;
-window.TideWatch.openInfoModal = openInfoModal;
-window.TideWatch.closeInfoModal = closeInfoModal;
-
-// ============================================================================
 // EXPORT
 // ============================================================================
 
@@ -1417,5 +1348,11 @@ window.TideWatch = {
     toggleTheme,
     manualRefresh,
     checkNetworkConnectivity,
-    state,
+    dimScreen,
+    brightenScreen,
+    openInfoModal,
+    closeInfoModal,
+    scaleToFit,
+    getScreenInfo,
+    state
 };

@@ -1,44 +1,52 @@
+"""
+Tide Service
+Handles tide data from NOAA CO-OPS API
+"""
 import requests
 from datetime import datetime, timedelta
 import pytz
 
+
 class TideService:
-    """Handles tide data from NOAA CO-OPS API"""
+    """Fetches and processes tide data from NOAA CO-OPS API"""
     
-    def __init__(self, prediction_station="9447130", observation_station="9447130", timezone="America/Los_Angeles"):
+    # Constants
+    BASE_URL = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
+    DEFAULT_STATION = "9447130"  # Seattle
+    DATUM = "MLLW"  # Mean Lower Low Water
+    UNITS = "english"
+    APPLICATION_NAME = "TideWatch"
+    
+    def __init__(self, prediction_station=None, observation_station=None, 
+                 timezone="America/Los_Angeles"):
         """
         Initialize tide service
-        - Station 9447130 = Seattle (both predictions and real-time water levels)
-        Note: We use Seattle for both because subordinate stations like Madronna Beach (9448233)
-        don't support API predictions. Seattle's tides are very similar to Camano Island.
+        Uses Seattle for both predictions and observations as subordinate stations
+        like Madronna Beach don't support API predictions
         """
-        self.prediction_station = prediction_station
-        self.observation_station = observation_station
-        self.base_url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
+        self.prediction_station = prediction_station or self.DEFAULT_STATION
+        self.observation_station = observation_station or self.DEFAULT_STATION
         self.timezone = pytz.timezone(timezone)
+        
+        # Caching
         self.cached_predictions = None
         self.cached_current = None
         self.last_prediction_update = None
         self.last_current_update = None
     
-    def _convert_to_12hr(self, time_str: str) -> str:
+    def _convert_to_12hr(self, time_str):
         """Convert 24-hour time string to 12-hour format with AM/PM"""
         try:
-            # Parse the datetime string from NOAA (format: "YYYY-MM-DD HH:MM")
             dt = datetime.strptime(time_str, "%Y-%m-%d %H:%M")
-            # Convert to Pacific timezone
             dt = self.timezone.localize(dt)
-            # Format to 12-hour with AM/PM
-            return dt.strftime('%I:%M %p').lstrip('0')  # Remove leading zero from hour
+            return dt.strftime('%I:%M %p').lstrip('0')
         except:
             return time_str
-        
+    
     def get_current_water_level(self):
-        """Get the current water level from Seattle station (real-time observation)"""
+        """Get the current water level from observation station"""
         try:
             now = datetime.now(self.timezone)
-            
-            # NOAA wants times in GMT
             now_gmt = now.astimezone(pytz.UTC)
             
             # Get data from last 30 minutes
@@ -46,20 +54,19 @@ class TideService:
             end_date = now_gmt.strftime("%Y%m%d %H:%M")
             
             params = {
-                'station': self.observation_station,  # Seattle station
+                'station': self.observation_station,
                 'begin_date': begin_date,
                 'end_date': end_date,
                 'product': 'water_level',
-                'datum': 'MLLW',  # Mean Lower Low Water
-                'units': 'english',
+                'datum': self.DATUM,
+                'units': self.UNITS,
                 'time_zone': 'gmt',
                 'format': 'json',
-                'application': 'TideWatch'
+                'application': self.APPLICATION_NAME
             }
             
-            response = requests.get(self.base_url, params=params, timeout=10)
+            response = requests.get(self.BASE_URL, params=params, timeout=10)
             response.raise_for_status()
-            
             data = response.json()
             
             # Get the most recent reading
@@ -83,71 +90,65 @@ class TideService:
                 self.cached_current = current_level
                 self.last_current_update = datetime.now()
                 
-                print(f"✅ Current water level: {current_level['height']} ft at {current_level['time_12hr']} (from Seattle)")
+                print(f"✅ Current water level: {current_level['height']} ft "
+                      f"at {current_level['time_12hr']} (from Seattle)")
                 return current_level
-            else:
-                print("⚠️ No current water level data available")
-                return None
+            
+            print("⚠️ No current water level data available")
+            return None
                 
         except Exception as e:
             print(f"❌ Error getting current water level: {e}")
             return self.cached_current
     
     def get_tide_predictions(self, days=7):
-        """Get tide predictions from Seattle station"""
+        """Get tide predictions from prediction station"""
         try:
             now = datetime.now(self.timezone)
             
-            # Get predictions starting from today
             begin_date = (now - timedelta(days=1)).strftime("%Y%m%d")
             end_date = (now + timedelta(days=days)).strftime("%Y%m%d")
             
             params = {
-                'station': self.prediction_station,  # Seattle
+                'station': self.prediction_station,
                 'begin_date': begin_date,
                 'end_date': end_date,
                 'product': 'predictions',
-                'datum': 'MLLW',
-                'units': 'english',
-                'time_zone': 'lst_ldt',  # Local standard/daylight time (auto-adjusts for DST)
-                'interval': 'hilo',  # High/Low only
+                'datum': self.DATUM,
+                'units': self.UNITS,
+                'time_zone': 'lst_ldt',  # Auto-adjusts for DST
+                'interval': 'hilo',
                 'format': 'json',
-                'application': 'TideWatch'
+                'application': self.APPLICATION_NAME
             }
             
-            response = requests.get(self.base_url, params=params, timeout=10)
-            
-            # Debug: print the actual URL and response
-            print(f"📡 Request URL: {response.url}")
-            
+            response = requests.get(self.BASE_URL, params=params, timeout=10)
             response.raise_for_status()
-            
             data = response.json()
             
-            # Debug: print response data
             if 'error' in data:
                 print(f"❌ API Error: {data.get('error', {})}")
                 return None
             
             if 'predictions' in data:
-                predictions = []
-                
-                for pred in data['predictions']:
-                    predictions.append({
+                predictions = [
+                    {
                         'time': pred['t'],
                         'time_12hr': self._convert_to_12hr(pred['t']),
                         'height': round(float(pred['v']), 2),
                         'type': pred['type']  # 'H' for high, 'L' for low
-                    })
+                    }
+                    for pred in data['predictions']
+                ]
                 
                 self.cached_predictions = predictions
                 self.last_prediction_update = datetime.now()
                 
                 print(f"✅ Loaded {len(predictions)} tide predictions (from Seattle)")
                 return predictions
-            else:
-                print("⚠️ No predictions available")
-                return None
+            
+            print("⚠️ No predictions available")
+            return None
                 
         except Exception as e:
             print(f"❌ Error getting tide predictions: {e}")
@@ -156,12 +157,10 @@ class TideService:
     def get_next_tides(self):
         """Get the next high and low tides from current time"""
         predictions = self.get_tide_predictions(days=2)
-        
         if not predictions:
             return None
         
         now = datetime.now(self.timezone)
-        
         next_high = None
         next_low = None
         
@@ -169,14 +168,12 @@ class TideService:
             tide_time = datetime.strptime(tide['time'], "%Y-%m-%d %H:%M")
             tide_time = self.timezone.localize(tide_time)
             
-            # Only look at future tides
             if tide_time > now:
                 if tide['type'] == 'H' and not next_high:
                     next_high = tide
                 elif tide['type'] == 'L' and not next_low:
                     next_low = tide
                 
-                # Stop once we have both
                 if next_high and next_low:
                     break
         
@@ -188,7 +185,6 @@ class TideService:
     def get_todays_tides(self):
         """Get all high/low tides for today"""
         predictions = self.get_tide_predictions(days=1)
-        
         if not predictions:
             return None
         
@@ -197,7 +193,6 @@ class TideService:
         today_end = today_start + timedelta(days=1)
         
         todays_tides = []
-        
         for tide in predictions:
             tide_time = datetime.strptime(tide['time'], "%Y-%m-%d %H:%M")
             tide_time = self.timezone.localize(tide_time)
@@ -216,7 +211,6 @@ class TideService:
         current = self.get_current_water_level()
         
         if not predictions:
-            # Even without predictions, try to give some status
             return {
                 'direction': 'Unknown',
                 'percentage': 0.5,
@@ -230,7 +224,7 @@ class TideService:
         prev_tide = None
         next_tide = None
         
-        for i, tide in enumerate(predictions):
+        for tide in predictions:
             tide_time = datetime.strptime(tide['time'], "%Y-%m-%d %H:%M")
             tide_time = self.timezone.localize(tide_time)
             
@@ -251,7 +245,7 @@ class TideService:
         # Determine if rising or falling
         is_rising = next_tide['type'] == 'H'
         
-        # Calculate percentage through this tide cycle based on time
+        # Calculate percentage through this tide cycle
         prev_time = datetime.strptime(prev_tide['time'], "%Y-%m-%d %H:%M")
         prev_time = self.timezone.localize(prev_time)
         next_time = datetime.strptime(next_tide['time'], "%Y-%m-%d %H:%M")
@@ -259,10 +253,9 @@ class TideService:
         
         total_duration = (next_time - prev_time).total_seconds()
         elapsed = (now - prev_time).total_seconds()
-        
         percentage = elapsed / total_duration if total_duration > 0 else 0.5
         
-        # If we have current water level, refine the percentage
+        # Refine percentage using current water level if available
         if current:
             current_height = current['height']
             prev_height = prev_tide['height']
@@ -271,7 +264,6 @@ class TideService:
             
             if abs(height_range) > 0.1:
                 height_percentage = (current_height - prev_height) / height_range
-                # Average time and height percentages for better accuracy
                 percentage = (percentage + height_percentage) / 2
         
         percentage = max(0.0, min(1.0, percentage))
@@ -307,8 +299,8 @@ class TideService:
         }
 
 
-# Test code
 if __name__ == "__main__":
+    # Test the tide service
     print("\n🌊 Testing Tide Service...\n")
     
     tide_service = TideService()
@@ -320,19 +312,17 @@ if __name__ == "__main__":
         print(f"   Height: {current['height']} {current['unit']}")
         print(f"   Time: {current.get('time_12hr', current['time'])}")
         print(f"   From: {current['station_name']}")
-    else:
-        print("   ❌ Failed to get current water level")
     
     # Test predictions
     print("\n2. Next High/Low Tides:")
     next_tides = tide_service.get_next_tides()
     if next_tides:
         if next_tides['next_high']:
-            print(f"   Next High: {next_tides['next_high'].get('time_12hr', next_tides['next_high']['time'])} - {next_tides['next_high']['height']} ft")
+            nh = next_tides['next_high']
+            print(f"   Next High: {nh.get('time_12hr', nh['time'])} - {nh['height']} ft")
         if next_tides['next_low']:
-            print(f"   Next Low: {next_tides['next_low'].get('time_12hr', next_tides['next_low']['time'])} - {next_tides['next_low']['height']} ft")
-    else:
-        print("   ❌ Failed to get predictions")
+            nl = next_tides['next_low']
+            print(f"   Next Low: {nl.get('time_12hr', nl['time'])} - {nl['height']} ft")
     
     # Test status
     print("\n3. Tide Status:")
@@ -347,8 +337,7 @@ if __name__ == "__main__":
     if todays:
         for tide in todays:
             tide_type = "High" if tide['type'] == 'H' else "Low"
-            print(f"   {tide_type}: {tide.get('time_12hr', tide['time'])} - {tide['height']} ft")
-    else:
-        print("   ❌ Failed to get today's tides")
+            print(f"   {tide_type}: {tide.get('time_12hr', tide['time'])} - "
+                  f"{tide['height']} ft")
     
     print("\n✅ Tide service test complete!")

@@ -1,23 +1,44 @@
-/* TideWatch Styles - Optimized for 1024x600 10.1" Touchscreen */
+/**
+ * TideWatch Styles
+ * Optimized for 1024x600 10.1" Touchscreen
+ */
 
-/* CSS Variables - Dark Mode (Default) */
+/* ============================================================================
+   CSS VARIABLES
+   ============================================================================ */
+
+/* Dark Mode (Default) */
 :root {
+    /* Colors - Primary Palette */
     --color-bg: #132E39;
     --color-primary: #2A545C;
     --color-secondary: #6F8F93;
     --color-accent: #A5C3C8;
+    --color-card: var(--color-primary);
+    --color-status-bar: var(--color-accent);
+    
+    /* Colors - Text */
     --color-text: #E3F2F4;
     --color-text-dim: #6F8F93;
+    
+    /* Colors - Functional */
     --color-border: #6F8F93;
     --color-high-tide: #D95E5E;
     --color-low-tide: #33C7FF;
     --color-turquoise: #00D1B2;
     --color-slate-blue: #6D6BC9;
-    --color-card: var(--color-primary);
-    --color-status-bar: var(--color-accent);
+    
+    /* Typography */
     --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    
+    /* Layout */
     --spacing: 0.5rem;
     --radius: 6px;
+    
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
 }
 
 /* Light Mode */
@@ -29,13 +50,14 @@
     --color-text: #1C2E34;
     --color-text-dim: #6A8FA0;
     --color-border: #BBCACD;
-    --color-high-tide: #D95E5E;
-    --color-low-tide: #33C7FF;
     --color-card: var(--color-primary);
     --color-status-bar: var(--color-accent);
 }
 
-/* Reset */
+/* ============================================================================
+   BASE STYLES
+   ============================================================================ */
+
 * {
     margin: 0;
     padding: 0;
@@ -53,10 +75,14 @@ body {
     background: var(--color-bg);
     color: var(--color-text);
     line-height: 1.2;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color var(--transition-normal), 
+                color var(--transition-normal);
 }
 
-/* Main Container - Landscape Layout */
+/* ============================================================================
+   LAYOUT - MAIN STRUCTURE
+   ============================================================================ */
+
 .container {
     display: flex;
     height: 600px;
@@ -64,7 +90,10 @@ body {
     padding-bottom: 32px;
 }
 
-/* Left Side Panel */
+/* ============================================================================
+   SIDE PANEL (LEFT)
+   ============================================================================ */
+
 .side-panel {
     width: 175px;
     background: var(--color-card);
@@ -73,42 +102,46 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: background-color var(--transition-normal), 
+                border-color var(--transition-normal);
 }
 
 .location-title {
-    font-size: 1.0rem;
+    font-size: 1rem;
     font-weight: 625;
     color: var(--color-accent);
     text-align: center;
     margin-top: 6%;
     margin-bottom: 3px;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
+/* Current Height Display */
 .current-height {
     text-align: center;
     padding: 8px 6px;
     background: var(--color-bg);
     border-radius: var(--radius);
     border: 2px solid var(--color-accent);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: background-color var(--transition-normal), 
+                border-color var(--transition-normal);
 }
 
 .current-height .label {
-    font-size: 0.90rem;
+    font-size: 0.9rem;
     color: var(--color-text-dim);
     margin-bottom: 3px;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .current-height .value {
     font-size: 1.6rem;
     font-weight: bold;
     color: var(--color-accent);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
+/* Next Tides Display */
 .tide-times {
     display: flex;
     flex-direction: column;
@@ -122,23 +155,26 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background-color 0.3s ease;
+    transition: background-color var(--transition-normal);
 }
 
 .tide-time .label {
     font-size: 0.9rem;
     color: var(--color-text-dim);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .tide-time .value {
     font-size: 0.9rem;
     font-weight: bold;
     color: var(--color-text);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
-/* Main Content Area */
+/* ============================================================================
+   MAIN CONTENT AREA
+   ============================================================================ */
+
 .main-content {
     flex: 1;
     display: flex;
@@ -148,7 +184,6 @@ body {
     overflow: hidden;
 }
 
-/* Top Section - Tide Dial + Weather/Astro */
 .top-section {
     display: flex;
     gap: 8px;
@@ -157,18 +192,9 @@ body {
     flex-shrink: 0;
 }
 
-/* Tide Dial Section - Left Side */
-.tide-dial-section {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.tide-dial-section .tide-dial-card {
-    width: auto;
-    min-width: 220px;
-}
+/* ============================================================================
+   INFO CARDS (REUSABLE)
+   ============================================================================ */
 
 .info-card {
     background: var(--color-card);
@@ -181,7 +207,8 @@ body {
     align-items: center;
     justify-content: flex-start;
     min-height: 110px;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: background-color var(--transition-normal), 
+                border-color var(--transition-normal);
 }
 
 .info-card h3 {
@@ -191,12 +218,23 @@ body {
     margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
-/* Tide Dial */
-.tide-dial-card {
-    position: relative;
+/* ============================================================================
+   TIDE DIAL SECTION
+   ============================================================================ */
+
+.tide-dial-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tide-dial-section .tide-dial-card {
+    width: auto;
+    min-width: 220px;
     min-height: 280px !important;
 }
 
@@ -215,22 +253,22 @@ body {
     height: auto;
 }
 
-.tide-label-high {
+/* Tide Labels - High/Low */
+.tide-label-high,
+.tide-label-low {
     position: absolute;
-    top: 1%;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
     z-index: 10;
 }
 
+.tide-label-high {
+    top: 1%;
+}
+
 .tide-label-low {
-    position: absolute;
     bottom: 1%;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 10;
 }
 
 .tide-extreme-label {
@@ -240,7 +278,7 @@ body {
     color: var(--color-text-dim);
     text-transform: uppercase;
     margin: 0;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .tide-extreme-time {
@@ -248,38 +286,43 @@ body {
     font-weight: 600;
     color: var(--color-text);
     margin: 0;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
+/* SVG Elements */
 .tide-ring-bg {
     stroke: var(--color-border);
     opacity: 0.3;
-    transition: stroke 0.3s ease;
+    transition: stroke var(--transition-normal);
 }
 
 #tide-arc {
-    transition: stroke 0.5s ease;
+    transition: stroke var(--transition-slow);
 }
 
 .tide-inner-circle {
     fill: var(--color-bg);
     stroke: var(--color-border);
-    transition: fill 0.3s ease, stroke 0.3s ease;
+    transition: fill var(--transition-normal), 
+                stroke var(--transition-normal);
 }
 
 .tide-side-label {
     fill: var(--color-accent);
     font-weight: 500;
     letter-spacing: 0.5px;
-    font-size: 8px;  
-    transition: fill 0.3s ease;
+    font-size: 8px;
+    transition: fill var(--transition-normal);
 }
 
 .tide-side-label.falling {
     fill: #ff6b6b;
 }
 
-/* Swipeable Center Display */
+/* ============================================================================
+   TIDE DIAL - SWIPEABLE CENTER DISPLAY
+   ============================================================================ */
+
 .tide-center-swipe-container {
     position: absolute;
     top: 45%;
@@ -299,7 +342,7 @@ body {
 .dial-swipe-wrapper {
     display: flex;
     height: 100%;
-    transition: transform 0.3s ease;
+    transition: transform var(--transition-normal);
     position: relative;
 }
 
@@ -324,9 +367,10 @@ body {
     margin-bottom: 4px;
     font-weight: 500;
     text-transform: capitalize;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
+/* Today's High/Low View */
 .tide-center-values {
     display: flex;
     flex-direction: column;
@@ -335,20 +379,21 @@ body {
     font-size: 1rem;
     color: var(--color-text);
     font-weight: 500;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .tide-high-value {
     color: var(--color-high-tide);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .tide-low-value {
     color: var(--color-low-tide);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
-#today-high, #today-low {
+#today-high, 
+#today-low {
     font-weight: 700;
     font-size: 0.95rem;
 }
@@ -367,7 +412,7 @@ body {
     color: var(--color-accent);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .next-tide-type.high {
@@ -382,14 +427,14 @@ body {
     font-size: 1.4rem;
     font-weight: 700;
     color: var(--color-text);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .next-tide-countdown {
     font-size: 1rem;
     color: var(--color-text-dim);
     font-weight: 550;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 /* Dial Swipe Indicators */
@@ -409,7 +454,7 @@ body {
     border-radius: 50%;
     background: var(--color-border);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
     opacity: 0.5;
 }
 
@@ -423,7 +468,10 @@ body {
     opacity: 0.8;
 }
 
-/* Right Panels Container */
+/* ============================================================================
+   RIGHT PANELS - WEATHER & ASTRONOMY
+   ============================================================================ */
+
 .right-panels {
     flex: 1;
     display: flex;
@@ -431,13 +479,13 @@ body {
     gap: 8px;
 }
 
-/* Top Info Grid */
+/* Info Grid - Weather Cards */
 .info-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
-    min-height: unset;  /* Remove inherited min-height from .info-card */
-    height: 80%;  /* Fit container height */
+    min-height: unset;
+    height: 80%;
 }
 
 /* Wind Display */
@@ -450,8 +498,8 @@ body {
 
 .wind-arrow {
     font-size: 75px;
-    transition: transform 0.5s ease;
-    -webkit-text-stroke: 2.5px var(--color-accent);  /* Add thickness */
+    transition: transform var(--transition-slow);
+    -webkit-text-stroke: 2.5px var(--color-accent);
     paint-order: stroke fill;
 }
 
@@ -459,7 +507,7 @@ body {
     font-size: 1.7rem;
     font-weight: bold;
     color: var(--color-text);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 /* Weather Display */
@@ -478,7 +526,7 @@ body {
     font-size: 2rem;
     font-weight: bold;
     color: var(--color-text);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 /* Visibility Display */
@@ -493,31 +541,35 @@ body {
     width: 75px;
     height: 86px;
     color: var(--color-text);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .droplet-outline {
-    transition: stroke 0.3s ease;
+    transition: stroke var(--transition-normal);
 }
 
 #visibility-fill {
-    transition: y 0.5s ease, height 0.5s ease;
+    transition: y var(--transition-slow), 
+                height var(--transition-slow);
 }
 
 .visibility-value {
     font-size: 2rem;
     font-weight: bold;
     color: var(--color-text);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
-/* Astronomy Section - reduce size and remove flex: 1 */
+/* ============================================================================
+   ASTRONOMY SECTION
+   ============================================================================ */
+
 .astronomy-section {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
     align-items: center;
-    height: 80px;  /* Fixed small height instead of flex: 1 */
+    height: 80px;
 }
 
 .astro-card {
@@ -528,9 +580,10 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    min-height: unset;  /* Remove inherited min-height from .info-card */
-    height: 100%;  /* Fit container height */
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    min-height: unset;
+    height: 100%;
+    transition: background-color var(--transition-normal), 
+                border-color var(--transition-normal);
 }
 
 .moon-phase-icon {
@@ -542,7 +595,7 @@ body {
 }
 
 .sun-icon {
-    font-size: 3rem; 
+    font-size: 3rem;
     flex-shrink: 0;
     gap: 15px;
 }
@@ -562,20 +615,23 @@ body {
 .astro-time .label {
     color: var(--color-text-dim);
     font-size: 1rem;
-    font-weight: 600px;
-    transition: color 0.3s ease;
+    font-weight: 600;
+    transition: color var(--transition-normal);
     gap: 6px;
 }
 
 .astro-time .value {
     color: var(--color-text);
     font-weight: bold;
-    font-size: 1.0rem;
-    transition: color 0.3s ease;
+    font-size: 1rem;
+    transition: color var(--transition-normal);
     gap: 6px;
 }
 
-/* Tide Chart Section - Swipeable */
+/* ============================================================================
+   TIDE CHART SECTION (SWIPEABLE)
+   ============================================================================ */
+
 .tide-chart-section {
     flex: 1;
     background: var(--color-card);
@@ -587,13 +643,14 @@ body {
     position: relative;
     overflow: hidden;
     min-height: 0;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: background-color var(--transition-normal), 
+                border-color var(--transition-normal);
 }
 
 .swipe-container {
     flex: 1;
     display: flex;
-    transition: transform 0.3s ease;
+    transition: transform var(--transition-normal);
     position: relative;
     min-height: 0;
 }
@@ -617,9 +674,10 @@ body {
     text-align: center;
     font-size: 1rem;
     flex-shrink: 0;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
+/* Chart Container */
 .chart-container {
     flex: 1;
     position: relative;
@@ -636,40 +694,14 @@ body {
     display: block;
 }
 
-/* Tide Table */
+/* ============================================================================
+   TIDE TABLE
+   ============================================================================ */
+
 .tide-table {
     flex: 1;
     overflow-y: auto;
 }
-
-.tide-table table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.tide-table th, .tide-table td {
-    padding: 4px 6px;
-    text-align: left;
-    border-bottom: 1px solid var(--color-border);
-    font-size: 0.7rem;
-    transition: border-color 0.3s ease;
-}
-
-.tide-table th {
-    background: var(--color-bg);
-    color: var(--color-accent);
-    font-weight: bold;
-    position: sticky;
-    top: 0;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.tide-table td {
-    color: var(--color-text);
-    transition: color 0.3s ease;
-}
-
-/* Simplified 5-Day Tide Table Styles - Replace the enhanced-tide-table styles */
 
 .enhanced-tide-table {
     width: 100%;
@@ -678,6 +710,7 @@ body {
     font-size: 0.75rem;
 }
 
+/* Table Header */
 .enhanced-tide-table thead th {
     background: var(--color-bg);
     color: var(--color-accent);
@@ -691,39 +724,54 @@ body {
     position: sticky;
     top: 0;
     z-index: 10;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    transition: background-color var(--transition-normal), 
+                color var(--transition-normal), 
+                border-color var(--transition-normal);
 }
 
 .enhanced-tide-table thead th sup {
     font-size: 0.55rem;
 }
 
+/* Table Rows */
 .enhanced-tide-table tbody tr {
     border-bottom: 1px solid var(--color-border);
-    transition: background-color 0.2s ease, border-color 0.3s ease;
+    transition: background-color var(--transition-fast), 
+                border-color var(--transition-normal);
 }
 
 .enhanced-tide-table tbody tr:hover {
     background: var(--color-bg);
 }
 
+/* Table Cells */
 .enhanced-tide-table td {
     padding: 8px 6px;
     text-align: center;
     vertical-align: middle;
     border-right: 1px solid var(--color-border);
-    transition: border-color 0.3s ease;
+    transition: border-color var(--transition-normal);
 }
 
 .enhanced-tide-table td:last-child {
     border-right: none;
 }
 
-/* Date Column */
+/* Column Sizing */
 .date-col {
     min-width: 60px;
 }
 
+.tide-col {
+    min-width: 70px;
+}
+
+.tide-cell {
+    min-width: 70px;
+    padding: 6px !important;
+}
+
+/* Date Cell */
 .date-cell {
     display: flex;
     align-items: center;
@@ -744,44 +792,26 @@ body {
     color: var(--color-text);
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .month-day {
     font-size: 0.7rem;
     color: var(--color-text-dim);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
-/* Tide Columns */
-.tide-col {
-    min-width: 70px;
-}
-
-.tide-cell {
-    min-width: 70px;
-    padding: 6px 6px !important;
-}
-
-.tide-time {
+/* Tide Cell Content */
+.tide-time,
+.tide-height {
     font-size: 1rem;
-    font-weight: 600px;
+    font-weight: 600;
     align-items: center;
     justify-content: center;
     margin-bottom: 3px;
     line-height: 1.2;
     gap: 8px;
-    transition: color 0.3s ease;
-}
-
-.tide-height {
-    font-size: 1rem;
-    font-weight: 600px;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 3px;
-    line-height: 1.2;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .tide-icon {
@@ -789,60 +819,30 @@ body {
 }
 
 /* High Tide Styling */
-.high-tide .tide-time {
-    color: var(--color-high-tide);
-}
-
-.high-tide .tide-height {
-    color: var(--color-high-tide);
-}
-
+.high-tide .tide-time,
+.high-tide .tide-height,
 .high-tide .tide-icon {
     color: var(--color-high-tide);
 }
 
 /* Low Tide Styling */
-.low-tide .tide-time {
-    color: var(--color-low-tide);
-}
-
-.low-tide .tide-height {
-    color: var(--color-low-tide);
-}
-
+.low-tide .tide-time,
+.low-tide .tide-height,
 .low-tide .tide-icon {
     color: var(--color-low-tide);
 }
 
-/* Empty cells */
+/* Empty Cells */
 .tide-cell.empty {
     color: var(--color-text-dim);
     font-size: 0.9rem;
     opacity: 0.5;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-    .enhanced-tide-table {
-        font-size: 0.7rem;
-    }
-    
-    .tide-time {
-        font-size: 0.8rem;
-    }
-    
-    .tide-height {
-        font-size: 0.8rem;
-    }
-    
-    .day-badge {
-        width: 28px;
-        height: 28px;
-        font-size: 1rem;
-    }
-}
+/* ============================================================================
+   SWIPE INDICATORS
+   ============================================================================ */
 
-/* Swipe Indicators */
 .swipe-indicators {
     display: flex;
     justify-content: center;
@@ -857,7 +857,7 @@ body {
     border-radius: 50%;
     background: var(--color-border);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
 }
 
 .indicator.active {
@@ -865,7 +865,10 @@ body {
     transform: scale(1.3);
 }
 
-/* Status Bar */
+/* ============================================================================
+   STATUS BAR
+   ============================================================================ */
+
 .status-bar {
     position: fixed;
     bottom: 0;
@@ -880,7 +883,8 @@ body {
     align-items: center;
     font-size: 0.65rem;
     z-index: 100;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: background-color var(--transition-normal), 
+                border-color var(--transition-normal);
 }
 
 #connection-status {
@@ -893,15 +897,18 @@ body {
     color: var(--color-text);
     font-weight: 600;
     font-size: 0.75rem;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 #last-update {
     color: var(--color-text-dim);
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
-/* Theme Toggle Button */
+/* ============================================================================
+   THEME TOGGLE BUTTON
+   ============================================================================ */
+
 .theme-toggle {
     position: fixed;
     bottom: 38px;
@@ -917,7 +924,7 @@ body {
     font-size: 1.2rem;
     cursor: pointer;
     z-index: 1000;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
 }
 
 .theme-toggle:hover {
@@ -929,14 +936,20 @@ body {
     transform: scale(0.95);
 }
 
-/* SVG elements color updates */
-.tide-dial circle {
-    stroke: var(--color-border);
-    transition: stroke 0.3s ease;
-}
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================================ */
 
-.tide-dial text {
-    transition: fill 0.3s ease;
+/* Table Responsive Sizing */
+@media (max-width: 1024px) {
+    .enhanced-tide-table {
+        font-size: 0.7rem;
+    }
+    
+    .tide-time,
+    .tide-height {
+        font-size: 0.8rem;
+    }
 }
 
 /* Touch-friendly for Pi touchscreen */
@@ -951,7 +964,8 @@ body {
         height: 8px;
     }
     
-    .info-card, .astro-card {
+    .info-card,
+    .astro-card {
         cursor: pointer;
     }
     

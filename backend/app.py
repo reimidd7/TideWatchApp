@@ -1,34 +1,35 @@
+"""
+TideWatch Flask Application
+Main server for tide, weather, and astronomy data visualization
+"""
 from flask import Flask, render_template, jsonify, send_from_directory
 from flask_cors import CORS
-import os
 from datetime import datetime
+
 from config import Config
 from weather_service import WeatherService
 from tide_service import TideService
 from astronomy_service import AstronomyService
 
+# Initialize Flask app
 app = Flask(__name__, 
             static_folder='../frontend',
             template_folder='../frontend')
 CORS(app)
-
-# Load configuration
 app.config.from_object(Config)
 
-# Initialize weather service
+# Initialize services
 weather_service = WeatherService(
     app.config['LATITUDE'],
     app.config['LONGITUDE']
 )
 
-# Initialize tide service
 tide_service = TideService(
     prediction_station=app.config['NOAA_PREDICTION_STATION'],
     observation_station=app.config['NOAA_OBSERVATION_STATION'],
     timezone=app.config['TIMEZONE']
 )
 
-# Initialize astronomy service
 astronomy_service = AstronomyService(
     app.config['LATITUDE'],
     app.config['LONGITUDE']
@@ -39,6 +40,7 @@ astronomy_service = AstronomyService(
 def index():
     """Serve the main frontend page"""
     return send_from_directory('../frontend', 'index.html')
+
 
 @app.route('/api/config')
 def get_config():
@@ -53,6 +55,7 @@ def get_config():
         }
     })
 
+
 @app.route('/api/health')
 def health_check():
     """Health check endpoint"""
@@ -61,6 +64,7 @@ def health_check():
         'timestamp': datetime.now().isoformat(),
         'location': app.config['LOCATION_NAME']
     })
+
 
 @app.route('/api/tide')
 def get_tide_data():
@@ -74,11 +78,11 @@ def get_tide_data():
                 'data': data,
                 'location': app.config['LOCATION_NAME']
             })
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': 'Failed to fetch tide data'
-            }), 500
+        
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch tide data'
+        }), 500
             
     except Exception as e:
         print(f"Error in /api/tide: {e}")
@@ -86,6 +90,7 @@ def get_tide_data():
             'status': 'error',
             'message': str(e)
         }), 500
+
 
 @app.route('/api/tide/current')
 def get_current_tide():
@@ -98,17 +103,18 @@ def get_current_tide():
                 'status': 'ok',
                 'data': current
             })
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': 'No current data available'
-            }), 404
+        
+        return jsonify({
+            'status': 'error',
+            'message': 'No current data available'
+        }), 404
             
     except Exception as e:
         return jsonify({
             'status': 'error',
             'message': str(e)
         }), 500
+
 
 @app.route('/api/tide/predictions')
 def get_tide_predictions():
@@ -121,17 +127,18 @@ def get_tide_predictions():
                 'status': 'ok',
                 'data': predictions
             })
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': 'No predictions available'
-            }), 404
+        
+        return jsonify({
+            'status': 'error',
+            'message': 'No predictions available'
+        }), 404
             
     except Exception as e:
         return jsonify({
             'status': 'error',
             'message': str(e)
         }), 500
+
 
 @app.route('/api/weather')
 def get_weather():
@@ -144,11 +151,12 @@ def get_weather():
             'data': data,
             'location': app.config['LOCATION_NAME']
         })
-    else:
-        return jsonify({
-            'status': 'error',
-            'message': 'Failed to fetch weather data'
-        }), 500
+    
+    return jsonify({
+        'status': 'error',
+        'message': 'Failed to fetch weather data'
+    }), 500
+
 
 @app.route('/api/astronomy')
 def get_astronomy_data():
@@ -161,16 +169,18 @@ def get_astronomy_data():
             'data': data,
             'location': app.config['LOCATION_NAME']
         })
-    else:
-        return jsonify({
-            'status': 'error',
-            'message': 'Failed to fetch astronomy data'
-        }), 500
+    
+    return jsonify({
+        'status': 'error',
+        'message': 'Failed to fetch astronomy data'
+    }), 500
 
-# Serve static files (CSS, JS, images)
+
 @app.route('/<path:path>')
 def serve_static(path):
+    """Serve static files (CSS, JS, images)"""
     return send_from_directory('../frontend', path)
+
 
 if __name__ == '__main__':
     print(f"\n🌊 TideWatch Server Starting...")

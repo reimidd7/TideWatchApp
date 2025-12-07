@@ -53,13 +53,13 @@ restart_kiosk() {
     echo "🔄 Restarting Chromium kiosk..."
     pkill -f "chromium.*kiosk"
     sleep 2
-    DISPLAY=:0 /home/pi/tidewatch/kiosk-start.sh &
+    DISPLAY=:0 ~/tidewatch/kiosk-start.sh &
     echo "✅ Kiosk restarted"
 }
 
 update_from_github() {
     echo "📥 Pulling latest changes from GitHub..."
-    cd /home/pi/tidewatch
+    cd ~/tidewatch
     git fetch
     echo ""
     echo "Changes to be pulled:"
@@ -68,7 +68,7 @@ update_from_github() {
     read -p "Continue with update? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        /home/pi/tidewatch/update.sh
+        ~/tidewatch/update.sh
         echo "✅ Update complete"
     else
         echo "❌ Update cancelled"

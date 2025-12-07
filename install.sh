@@ -6,9 +6,9 @@ set -e
 
 echo "🌊 TideWatch Kiosk Setup Starting..."
 
-# Get installation directory
-INSTALL_DIR="/home/pi/tidewatch"
-SERVICE_USER="pi"
+# Get installation directory and current user
+SERVICE_USER=$(whoami)
+INSTALL_DIR="/home/${SERVICE_USER}/tidewatch"
 
 # Colors for output
 RED='\033[0;31m'
@@ -97,13 +97,13 @@ EOF
 
 # Create kiosk autostart script
 echo -e "${GREEN}🖥️  Creating kiosk autostart...${NC}"
-mkdir -p /home/pi/.config/autostart
+mkdir -p /home/${SERVICE_USER}/.config/autostart
 
-tee /home/pi/.config/autostart/tidewatch-kiosk.desktop > /dev/null <<EOF
+tee /home/${SERVICE_USER}/.config/autostart/tidewatch-kiosk.desktop > /dev/null <<EOF
 [Desktop Entry]
 Type=Application
 Name=TideWatch Kiosk
-Exec=/home/pi/tidewatch/kiosk-start.sh
+Exec=/home/${SERVICE_USER}/tidewatch/kiosk-start.sh
 X-GNOME-Autostart-enabled=true
 EOF
 
@@ -222,11 +222,11 @@ echo -e "${YELLOW}Run 'sudo tailscale up' after installation to connect${NC}"
 
 # Create update script
 echo -e "${GREEN}🔄 Creating update script...${NC}"
-tee ${INSTALL_DIR}/update.sh > /dev/null <<'EOF'
+tee ${INSTALL_DIR}/update.sh > /dev/null <<EOF
 #!/bin/bash
 # TideWatch Update Script
 
-cd /home/pi/tidewatch
+cd /home/${SERVICE_USER}/tidewatch
 git pull origin main
 source venv/bin/activate
 
@@ -282,13 +282,13 @@ sudo systemctl enable tidewatch-watchdog.service
 sudo systemctl start tidewatch-watchdog.service
 
 # Create convenience scripts
-tee /home/pi/Desktop/restart-tidewatch.sh > /dev/null <<'EOF'
+tee /home/${SERVICE_USER}/Desktop/restart-tidewatch.sh > /dev/null <<EOF
 #!/bin/bash
 sudo systemctl restart tidewatch-backend.service
 chromium-browser http://localhost:5000 &
 EOF
 
-chmod +x /home/pi/Desktop/restart-tidewatch.sh
+chmod +x /home/${SERVICE_USER}/Desktop/restart-tidewatch.sh
 
 echo -e "${GREEN}✅ Installation complete!${NC}"
 echo ""

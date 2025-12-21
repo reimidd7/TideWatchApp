@@ -231,13 +231,6 @@ function scaleToFit() {
     
     container.style.transform = `scale(${scale})`;
     
-    // Scale modal to match
-    const modal = document.querySelector('.info-modal');
-    if (modal) {
-        modal.style.transform = `scale(${scale})`;
-        modal.style.transformOrigin = 'center center';
-    }
-    
     console.log(`📐 Scaled to ${(scale * 100).toFixed(1)}% (${windowWidth}x${windowHeight} viewport)`);
     
     setTimeout(() => {

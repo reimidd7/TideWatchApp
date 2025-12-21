@@ -1120,6 +1120,46 @@ body {
     transition: color var(--transition-normal);
 }
 
+.demo-button {
+    position: absolute;
+    bottom: 46px;
+    right: 10px;
+    background: #FFD700;
+    border: 2px solid #FFA500;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all var(--transition-normal);
+    color: #132E39;
+    animation: pulse 2s infinite;
+}
+
+.demo-button i {
+    display: block;
+}
+
+.demo-button:hover {
+    background: #FFA500;
+    transform: scale(1.05);
+}
+
+.demo-button.active {
+    background: #D95E5E;
+    border-color: #FF6B6B;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+
 @keyframes fadeIn {
     from {
         opacity: 0;

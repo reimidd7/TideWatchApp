@@ -451,7 +451,7 @@ body {
 }
 
 .wind-arrow {
-    font-size: 75px;
+    font-size: 70px;
     transition: transform var(--transition-slow);
     -webkit-text-stroke: 2.5px var(--color-accent);
     paint-order: stroke fill;
@@ -473,7 +473,7 @@ body {
 }
 
 .weather-icon {
-    font-size: 75px;
+    font-size: 70px;
 }
 
 .weather-temp {
@@ -492,8 +492,8 @@ body {
 }
 
 .visibility-droplet {
-    width: 75px;
-    height: 86px;
+    width: 72px;
+    height: 83px;
     color: var(--color-text);
     transition: color var(--transition-normal);
 }
@@ -549,7 +549,7 @@ body {
 }
 
 .sun-icon {
-    font-size: 3rem;
+    font-size: 2.85rem;
     flex-shrink: 0;
     gap: 15px;
 }
@@ -1178,7 +1178,7 @@ body {
     .refresh-button {
         width: 48px;
         height: 48px;
-        font-size: 1.6rem;
+        font-size: 1.4rem;
     }
     
     .info-modal-close {

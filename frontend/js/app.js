@@ -144,6 +144,9 @@ function setupEventListeners() {
             closeInfoModal();
         }
     });
+
+    // Call this in your existing setupEventListeners() function:
+    setupDemoButton();
 }
 
 async function initApp() {
@@ -1348,11 +1351,12 @@ function populateInfoModal() {
 }
 
 // ============================================================================
-// DEMO MODE - Add this to the end of app.js (before the window.TideWatch export)
+// DEMO MODE WITH UI BUTTON - Add to app.js
 // ============================================================================
 
 let demoMode = false;
 let demoInterval = null;
+let currentDemoIndex = 0;
 
 const DEMO_WEATHER_STATES = [
     { conditions: 'Sunny', temp: 75, wind_speed: '5 mph', wind_direction: 'N', wind_direction_degrees: 0, visibility: '10.0 mi' },
@@ -1367,27 +1371,37 @@ const DEMO_WEATHER_STATES = [
     { conditions: 'Windy', temp: 50, wind_speed: '35 mph', wind_direction: 'NE', wind_direction_degrees: 45, visibility: '8.0 mi' }
 ];
 
-let currentDemoIndex = 0;
+function toggleDemoMode() {
+    if (demoMode) {
+        stopDemoMode();
+    } else {
+        startDemoMode();
+    }
+}
 
 function startDemoMode() {
-    if (demoMode) {
-        console.log('Demo mode already running');
-        return;
-    }
+    if (demoMode) return;
     
     demoMode = true;
-    console.log('🎬 DEMO MODE ACTIVATED - Cycling through all weather states');
-    console.log('Press Ctrl+D or type stopDemoMode() to exit');
+    console.log('🎬 DEMO MODE ACTIVATED');
     
-    // Show demo indicator
+    const demoBtn = document.getElementById('demo-button');
+    if (demoBtn) {
+        demoBtn.classList.add('active');
+    }
+    
+    // Show demo indicator in status bar
     const statusBar = document.querySelector('.status-bar');
     if (statusBar) {
-        const demoIndicator = document.createElement('span');
-        demoIndicator.id = 'demo-indicator';
-        demoIndicator.innerHTML = '<i class="fas fa-film"></i> DEMO MODE';
-        demoIndicator.style.color = '#FFD700';
-        demoIndicator.style.fontWeight = 'bold';
-        statusBar.insertBefore(demoIndicator, statusBar.firstChild);
+        let demoIndicator = document.getElementById('demo-indicator');
+        if (!demoIndicator) {
+            demoIndicator = document.createElement('span');
+            demoIndicator.id = 'demo-indicator';
+            demoIndicator.innerHTML = '<i class="fas fa-film"></i> DEMO';
+            demoIndicator.style.color = '#FFD700';
+            demoIndicator.style.fontWeight = 'bold';
+            statusBar.insertBefore(demoIndicator, statusBar.firstChild);
+        }
     }
     
     // Cycle through weather states every 3 seconds
@@ -1400,13 +1414,15 @@ function startDemoMode() {
 }
 
 function stopDemoMode() {
-    if (!demoMode) {
-        console.log('Demo mode not running');
-        return;
-    }
+    if (!demoMode) return;
     
     demoMode = false;
-    console.log('🛑 Demo mode stopped - reloading real data...');
+    console.log('🛑 Demo mode stopped');
+    
+    const demoBtn = document.getElementById('demo-button');
+    if (demoBtn) {
+        demoBtn.classList.remove('active');
+    }
     
     // Remove demo indicator
     const indicator = document.getElementById('demo-indicator');
@@ -1426,7 +1442,7 @@ function stopDemoMode() {
 function cycleDemoWeather() {
     const weatherState = DEMO_WEATHER_STATES[currentDemoIndex];
     
-    console.log(`📊 Demo State ${currentDemoIndex + 1}/${DEMO_WEATHER_STATES.length}: ${weatherState.conditions}`);
+    console.log(`📊 Demo: ${weatherState.conditions}`);
     
     // Update weather display
     const demoData = {
@@ -1448,111 +1464,16 @@ function cycleDemoWeather() {
     currentDemoIndex = (currentDemoIndex + 1) % DEMO_WEATHER_STATES.length;
 }
 
-function testAllIcons() {
-    console.log('🎨 TESTING ALL ICONS:');
-    console.log('');
-    console.log('WEATHER ICONS:');
-    Object.keys(WEATHER_EMOJI).forEach(condition => {
-        console.log(`  ${condition}: ${WEATHER_EMOJI[condition]}`);
-    });
-    console.log('');
-    console.log('UI ICONS:');
-    console.log('  Theme Toggle: fa-moon / fa-sun');
-    console.log('  Info Button: fa-info');
-    console.log('  Refresh: fa-sync');
-    console.log('  Connection: fa-circle');
-    console.log('  Network: fa-wifi');
-    console.log('  Wind Arrow: fa-arrow-up (rotates based on direction)');
-    console.log('');
-    console.log('💡 Start demo mode to see all weather icons cycle:');
-    console.log('   Type: startDemoMode()');
-}
-
-// Test individual weather conditions
-function testWeatherIcon(condition) {
-    const validConditions = Object.keys(WEATHER_EMOJI);
-    
-    if (!validConditions.includes(condition.toLowerCase())) {
-        console.log(`❌ Invalid condition. Valid options: ${validConditions.join(', ')}`);
-        return;
+// Add event listener for demo button
+// (This should run after DOM is loaded, put it in setupEventListeners function)
+function setupDemoButton() {
+    const demoButton = document.getElementById('demo-button');
+    if (demoButton) {
+        demoButton.addEventListener('click', toggleDemoMode);
     }
-    
-    const demoData = {
-        status: 'ok',
-        data: {
-            temperature: 72,
-            temperature_unit: 'F',
-            conditions: condition,
-            wind_speed: '10 mph',
-            wind_direction: 'N',
-            wind_direction_degrees: 0,
-            visibility: '10.0 mi'
-        }
-    };
-    
-    displayWeather(demoData);
-    console.log(`✅ Displaying: ${condition} icon`);
 }
 
-// Test connection status
-function testConnectionStatus(connected) {
-    updateConnectionStatus(connected);
-    console.log(`✅ Connection status: ${connected ? 'Connected' : 'Disconnected'}`);
-}
 
-// Test network status
-function testNetworkStatus(online) {
-    updateNetworkStatus(online);
-    console.log(`✅ Network status: ${online ? 'Online' : 'Offline'}`);
-}
-
-// Test theme toggle
-function testThemeToggle() {
-    toggleTheme();
-    console.log(`✅ Theme switched to: ${state.theme}`);
-}
-
-// Keyboard shortcut for demo mode (Ctrl+D)
-document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'd') {
-        e.preventDefault();
-        if (demoMode) {
-            stopDemoMode();
-        } else {
-            startDemoMode();
-        }
-    }
-});
-
-// Export demo functions
-window.TideWatch.demo = {
-    start: startDemoMode,
-    stop: stopDemoMode,
-    testAllIcons,
-    testWeatherIcon,
-    testConnectionStatus,
-    testNetworkStatus,
-    testThemeToggle,
-    
-    // Quick access to demo functions
-    help: () => {
-        console.log('🎬 TIDEWATCH DEMO MODE COMMANDS:');
-        console.log('');
-        console.log('TideWatch.demo.start()              - Start auto-cycling demo');
-        console.log('TideWatch.demo.stop()               - Stop demo mode');
-        console.log('TideWatch.demo.testAllIcons()       - List all available icons');
-        console.log('TideWatch.demo.testWeatherIcon("sunny") - Test specific weather icon');
-        console.log('TideWatch.demo.testConnectionStatus(false) - Test disconnected state');
-        console.log('TideWatch.demo.testNetworkStatus(false) - Test offline state');
-        console.log('TideWatch.demo.testThemeToggle()    - Toggle light/dark theme');
-        console.log('');
-        console.log('KEYBOARD SHORTCUTS:');
-        console.log('Ctrl+D - Toggle demo mode on/off');
-        console.log('');
-        console.log('AVAILABLE WEATHER CONDITIONS:');
-        console.log(Object.keys(WEATHER_EMOJI).join(', '));
-    }
-};
 
 // ============================================================================
 // EXPORT

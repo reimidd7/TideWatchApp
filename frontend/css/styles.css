@@ -940,7 +940,7 @@ body {
    ============================================================================ */
 
 .data-status-table-container {
-    max-height: 300px;
+    max-height: 350px; /* Increased from 300px */
     overflow-y: auto;
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
@@ -949,7 +949,7 @@ body {
 .data-status-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.85rem;
+    font-size: 1rem; /* Increased from 0.85rem */
 }
 
 .data-status-table thead {
@@ -960,18 +960,18 @@ body {
 }
 
 .data-status-table th {
-    padding: 10px 8px;
+    padding: 12px 10px; /* Increased from 10px 8px */
     text-align: left;
     font-weight: 600;
     color: var(--color-accent);
     border-bottom: 2px solid var(--color-border);
-    font-size: 0.75rem;
+    font-size: 0.95rem; /* Increased from 0.75rem */
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .data-status-table td {
-    padding: 8px;
+    padding: 10px; /* Increased from 8px */
     border-bottom: 1px solid var(--color-border);
 }
 
@@ -985,17 +985,19 @@ body {
 
 .data-name {
     font-weight: 600;
+    font-size: 1rem; /* Added */
     color: var(--color-text-dim);
 }
 
 .data-value {
     color: var(--color-text);
+    font-size: 1rem; /* Added */
     font-family: monospace;
 }
 
 .data-timestamp {
     color: var(--color-text-dim);
-    font-size: 0.8rem;
+    font-size: 0.95rem; /* Increased from 0.8rem */
     white-space: nowrap;
 }
 
@@ -1085,10 +1087,10 @@ body {
     background: var(--color-card);
     border: 3px solid var(--color-accent);
     border-radius: 12px;
-    padding: 24px;
-    max-width: 500px;
-    width: 85%;
-    max-height: 90vh;
+    padding: 32px; /* Increased from 24px */
+    max-width: 600px; /* Increased from 500px */
+    width: 90%; /* Increased from 85% */
+    max-height: 80vh; /* Increased from 70vh */
     overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     animation: slideUp 0.3s ease;
@@ -1100,13 +1102,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
+    margin-bottom: 24px; /* Increased from 20px */
+    padding-bottom: 20px; /* Increased from 15px */
     border-bottom: 2px solid var(--color-border);
 }
 
 .info-modal-title {
-    font-size: 1.5rem;
+    font-size: 2rem; /* Increased from 1.5rem */
     font-weight: 700;
     color: var(--color-accent);
     margin: 0;
@@ -1116,11 +1118,11 @@ body {
 .info-modal-close {
     background: transparent;
     border: none;
-    font-size: 2rem;
+    font-size: 2.5rem; /* Increased from 2rem */
     color: var(--color-text);
     cursor: pointer;
-    width: 40px;
-    height: 40px;
+    width: 50px; /* Increased from 40px */
+    height: 50px; /* Increased from 40px */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1136,17 +1138,18 @@ body {
 .info-modal-content {
     color: var(--color-text);
     line-height: 1.6;
+    font-size: 1.1rem; /* Added base font size */
 }
 
 .info-section {
-    margin-bottom: 20px;
+    margin-bottom: 28px; /* Increased from 20px */
 }
 
 .info-section-title {
-    font-size: 1rem;
+    font-size: 1.3rem; /* Increased from 1rem */
     font-weight: 600;
     color: var(--color-accent);
-    margin-bottom: 10px;
+    margin-bottom: 14px; /* Increased from 10px */
     text-transform: uppercase;
     letter-spacing: 0.5px;
     transition: color var(--transition-normal);
@@ -1155,7 +1158,7 @@ body {
 .info-item {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
+    padding: 12px 0; /* Increased from 8px */
     border-bottom: 1px solid var(--color-border);
     transition: border-color var(--transition-normal);
 }
@@ -1166,21 +1169,23 @@ body {
 
 .info-label {
     font-weight: 600;
+    font-size: 1.05rem; /* Added */
     color: var(--color-text-dim);
     transition: color var(--transition-normal);
 }
 
 .info-value {
     color: var(--color-text);
+    font-size: 1.05rem; /* Added */
     text-align: right;
     transition: color var(--transition-normal);
 }
 
 .info-description {
     color: var(--color-text-dim);
-    font-size: 0.85rem;
-    margin-top: 8px;
-    line-height: 1.5;
+    font-size: 1rem; /* Increased from 0.85rem */
+    margin-top: 12px; /* Increased from 8px */
+    line-height: 1.6;
     transition: color var(--transition-normal);
 }
 

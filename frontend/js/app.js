@@ -112,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDimming();
     setupEventListeners();
     setPlaceholders();
+    preventInteractions();
     initApp();
 });
 
@@ -1484,6 +1485,52 @@ function populateInfoModal() {
     
     // Populate data status table
     populateDataStatusTable();
+}
+
+// ============================================================================
+// PREVENT UNWANTED INTERACTIONS
+// ============================================================================
+
+function preventInteractions() {
+    // Prevent context menu (right-click)
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        return false;
+    });
+    
+    // Prevent copy/cut/paste
+    document.addEventListener('copy', (e) => e.preventDefault());
+    document.addEventListener('cut', (e) => e.preventDefault());
+    document.addEventListener('paste', (e) => e.preventDefault());
+    
+    // Prevent drag
+    document.addEventListener('dragstart', (e) => e.preventDefault());
+    
+    // Prevent pinch zoom on touch devices
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    // Prevent zoom via keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Prevent double-tap zoom on iOS
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, { passive: false });
+    
+    console.log('🔒 Interaction prevention enabled');
 }
 
 // ============================================================================

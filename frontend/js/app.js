@@ -250,7 +250,7 @@ function scaleToFit() {
 }
 
 function getScreenInfo() {
-    const physicalWidth = 250;
+    const physicalWidth = 400;
     const physicalHeight = 145;
     
     const screenWidthPx = window.screen.width;

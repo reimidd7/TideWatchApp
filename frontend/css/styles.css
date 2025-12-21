@@ -936,6 +936,70 @@ body {
 }
 
 /* ============================================================================
+   DATA STATUS TABLE
+   ============================================================================ */
+
+.data-status-table-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+.data-status-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.data-status-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--color-bg);
+    z-index: 10;
+}
+
+.data-status-table th {
+    padding: 10px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-accent);
+    border-bottom: 2px solid var(--color-border);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-status-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.data-status-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-status-table tbody tr:hover {
+    background: var(--color-bg);
+}
+
+.data-name {
+    font-weight: 600;
+    color: var(--color-text-dim);
+}
+
+.data-value {
+    color: var(--color-text);
+    font-family: monospace;
+}
+
+.data-timestamp {
+    color: var(--color-text-dim);
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+/* ============================================================================
    MANUAL REFRESH BUTTON - NOW ABSOLUTE WITHIN CONTAINER
    ============================================================================ */
 

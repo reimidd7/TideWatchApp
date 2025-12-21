@@ -80,7 +80,14 @@ const state = {
     lastUpdate: null,
     isConnected: false,
     networkOnline: true,
-    theme: 'dark'
+    theme: 'dark',
+    // Add data update tracking
+    dataTimestamps: {
+        tide: null,
+        weather: null,
+        astronomy: null,
+        config: null
+    }
 };
 
 const dialSwipeState = {
@@ -475,6 +482,7 @@ async function loadConfig() {
         const response = await fetch(`${API_BASE}/api/config`);
         const data = await response.json();
         state.config = data;
+        state.dataTimestamps.config = new Date(); // Add this
         
         updateElement('location-name', data.location?.name);
         console.log('📍 Location loaded:', data.location?.name);
@@ -507,6 +515,7 @@ async function loadTideData() {
         if (result.status === 'ok') {
             state.tideData = result.data;
             state.isConnected = true;
+            state.dataTimestamps.tide = new Date(); // Add this
             console.log('🌊 Tide data loaded:', result.data);
             
             displayTideData(result.data);
@@ -530,6 +539,7 @@ async function loadWeatherData() {
         
         if (data.status === 'ok') {
             state.weatherData = data;
+            state.dataTimestamps.weather = new Date(); // Add this
             displayWeather(data);
             updateLastUpdateTime();
             return data;
@@ -552,6 +562,7 @@ async function loadAstronomyData() {
         
         if (data.status === 'ok') {
             state.astronomyData = data;
+            state.dataTimestamps.astronomy = new Date(); // Add this
             console.log('Astronomy data:', data);
             displayAstronomy(data);
             updateLastUpdateTime();
@@ -567,6 +578,8 @@ async function loadAstronomyData() {
         return null;
     }
 }
+
+
 
 // ============================================================================
 // PLACEHOLDER FUNCTIONS
@@ -1306,6 +1319,135 @@ function closeInfoModal() {
     }
 }
 
+function populateDataStatusTable() {
+    const tbody = document.getElementById('data-status-tbody');
+    if (!tbody) return;
+    
+    const formatTimestamp = (date) => {
+        if (!date) return 'Never';
+        return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }) + ' ' +
+               date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    };
+    
+    const rows = [];
+    
+    // Tide Data
+    if (state.tideData?.current) {
+        rows.push({
+            name: 'Current Tide Height',
+            value: `${state.tideData.current.height} ft`,
+            timestamp: state.dataTimestamps.tide
+        });
+    }
+    
+    if (state.tideData?.next_high) {
+        rows.push({
+            name: 'Next High Tide',
+            value: `${state.tideData.next_high.height} ft at ${state.tideData.next_high.time_12hr || formatTime(state.tideData.next_high.time)}`,
+            timestamp: state.dataTimestamps.tide
+        });
+    }
+    
+    if (state.tideData?.next_low) {
+        rows.push({
+            name: 'Next Low Tide',
+            value: `${state.tideData.next_low.height} ft at ${state.tideData.next_low.time_12hr || formatTime(state.tideData.next_low.time)}`,
+            timestamp: state.dataTimestamps.tide
+        });
+    }
+    
+    // Weather Data
+    if (state.weatherData?.data) {
+        const w = state.weatherData.data;
+        
+        if (w.temperature != null) {
+            rows.push({
+                name: 'Temperature',
+                value: `${w.temperature}°${w.temperature_unit || 'F'}`,
+                timestamp: state.dataTimestamps.weather
+            });
+        }
+        
+        if (w.wind_speed && w.wind_direction) {
+            rows.push({
+                name: 'Wind',
+                value: `${w.wind_speed} ${w.wind_direction}`,
+                timestamp: state.dataTimestamps.weather
+            });
+        }
+        
+        if (w.visibility) {
+            rows.push({
+                name: 'Visibility',
+                value: w.visibility,
+                timestamp: state.dataTimestamps.weather
+            });
+        }
+        
+        if (w.conditions) {
+            rows.push({
+                name: 'Conditions',
+                value: w.conditions,
+                timestamp: state.dataTimestamps.weather
+            });
+        }
+    }
+    
+    // Astronomy Data
+    if (state.astronomyData?.data) {
+        const a = state.astronomyData.data;
+        
+        if (a.sunrise) {
+            rows.push({
+                name: 'Sunrise',
+                value: a.sunrise,
+                timestamp: state.dataTimestamps.astronomy
+            });
+        }
+        
+        if (a.sunset) {
+            rows.push({
+                name: 'Sunset',
+                value: a.sunset,
+                timestamp: state.dataTimestamps.astronomy
+            });
+        }
+        
+        if (a.moonrise) {
+            rows.push({
+                name: 'Moonrise',
+                value: a.moonrise,
+                timestamp: state.dataTimestamps.astronomy
+            });
+        }
+        
+        if (a.moonset) {
+            rows.push({
+                name: 'Moonset',
+                value: a.moonset,
+                timestamp: state.dataTimestamps.astronomy
+            });
+        }
+        
+        if (a.moon_phase) {
+            rows.push({
+                name: 'Moon Phase',
+                value: `${a.moon_phase} (${a.moon_illumination}% illumination)`,
+                timestamp: state.dataTimestamps.astronomy
+            });
+        }
+    }
+    
+    // Generate table HTML
+    tbody.innerHTML = rows.map(row => `
+        <tr>
+            <td class="data-name">${row.name}</td>
+            <td class="data-value">${row.value}</td>
+            <td class="data-timestamp">${formatTimestamp(row.timestamp)}</td>
+        </tr>
+    `).join('');
+}
+
 function populateInfoModal() {
     if (state.config?.location) {
         const loc = state.config.location;
@@ -1339,6 +1481,9 @@ function populateInfoModal() {
         });
         updateElement('info-last-update', `${dateStr} at ${timeStr}`);
     }
+    
+    // Populate data status table
+    populateDataStatusTable();
 }
 
 // ============================================================================

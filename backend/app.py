@@ -1,401 +1,349 @@
 """
-System Service
-Handles WiFi, updates, and system management for kiosk mode
+TideWatch Flask Application
+Main server for tide, weather, astronomy, and system management
 """
-import subprocess
-import os
-import re
-from typing import Optional, Dict, List
+from flask import Flask, render_template, jsonify, send_from_directory, request
+from flask_cors import CORS
 from datetime import datetime
 
+from config import Config
+from weather_service import WeatherService
+from tide_service import TideService
+from astronomy_service import AstronomyService
+from system_service import SystemService
 
-class SystemService:
-    """Manages system operations for TideWatch kiosk"""
-    
-    def __init__(self, install_dir: str = None):
-        self.install_dir = install_dir or os.path.expanduser("~/tidewatch")
-    
-    # =========================================================================
-    # WIFI MANAGEMENT
-    # =========================================================================
-    
-    def get_wifi_status(self) -> Dict:
-        """Get current WiFi connection status"""
-        try:
-            # Get current connection
-            result = subprocess.run(
-                ['nmcli', '-t', '-f', 'ACTIVE,SSID,SIGNAL,SECURITY', 'dev', 'wifi'],
-                capture_output=True, text=True, timeout=10
-            )
-            
-            current_ssid = None
-            signal = None
-            security = None
-            
-            for line in result.stdout.strip().split('\n'):
-                if line.startswith('yes:'):
-                    parts = line.split(':')
-                    if len(parts) >= 4:
-                        current_ssid = parts[1]
-                        signal = parts[2]
-                        security = parts[3]
-                    break
-            
-            # Get IP address
-            ip_result = subprocess.run(
-                ['hostname', '-I'],
-                capture_output=True, text=True, timeout=5
-            )
-            ip_address = ip_result.stdout.strip().split()[0] if ip_result.stdout.strip() else None
-            
-            # Check internet connectivity
-            internet = self._check_internet()
-            
-            return {
-                'connected': current_ssid is not None,
-                'ssid': current_ssid,
-                'signal': signal,
-                'security': security,
-                'ip_address': ip_address,
-                'internet': internet
-            }
-        except Exception as e:
-            print(f"Error getting WiFi status: {e}")
-            return {
-                'connected': False,
-                'ssid': None,
-                'signal': None,
-                'security': None,
-                'ip_address': None,
-                'internet': False,
-                'error': str(e)
-            }
-    
-    def scan_wifi_networks(self) -> List[Dict]:
-        """Scan for available WiFi networks"""
-        try:
-            # Rescan networks
-            subprocess.run(['nmcli', 'dev', 'wifi', 'rescan'], 
-                          capture_output=True, timeout=15)
-            
-            # Get network list
-            result = subprocess.run(
-                ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY,IN-USE', 'dev', 'wifi', 'list'],
-                capture_output=True, text=True, timeout=10
-            )
-            
-            networks = []
-            seen_ssids = set()
-            
-            for line in result.stdout.strip().split('\n'):
-                if not line:
-                    continue
-                parts = line.split(':')
-                if len(parts) >= 4:
-                    ssid = parts[0]
-                    if ssid and ssid not in seen_ssids:
-                        seen_ssids.add(ssid)
-                        networks.append({
-                            'ssid': ssid,
-                            'signal': int(parts[1]) if parts[1].isdigit() else 0,
-                            'security': parts[2] if parts[2] else 'Open',
-                            'connected': parts[3] == '*'
-                        })
-            
-            # Sort by signal strength
-            networks.sort(key=lambda x: x['signal'], reverse=True)
-            return networks
-            
-        except Exception as e:
-            print(f"Error scanning WiFi: {e}")
-            return []
-    
-    def connect_wifi(self, ssid: str, password: str = None) -> Dict:
-        """Connect to a WiFi network"""
-        try:
-            if password:
-                result = subprocess.run(
-                    ['nmcli', 'dev', 'wifi', 'connect', ssid, 'password', password],
-                    capture_output=True, text=True, timeout=30
-                )
-            else:
-                result = subprocess.run(
-                    ['nmcli', 'dev', 'wifi', 'connect', ssid],
-                    capture_output=True, text=True, timeout=30
-                )
-            
-            success = result.returncode == 0
-            
-            return {
-                'success': success,
-                'message': result.stdout.strip() if success else result.stderr.strip(),
-                'ssid': ssid
-            }
-        except subprocess.TimeoutExpired:
-            return {'success': False, 'message': 'Connection timed out', 'ssid': ssid}
-        except Exception as e:
-            return {'success': False, 'message': str(e), 'ssid': ssid}
-    
-    def disconnect_wifi(self) -> Dict:
-        """Disconnect from current WiFi"""
-        try:
-            result = subprocess.run(
-                ['nmcli', 'dev', 'disconnect', 'wlan0'],
-                capture_output=True, text=True, timeout=10
-            )
-            return {
-                'success': result.returncode == 0,
-                'message': result.stdout.strip() or result.stderr.strip()
-            }
-        except Exception as e:
-            return {'success': False, 'message': str(e)}
-    
-    def get_saved_networks(self) -> List[str]:
-        """Get list of saved WiFi networks"""
-        try:
-            result = subprocess.run(
-                ['nmcli', '-t', '-f', 'NAME,TYPE', 'connection', 'show'],
-                capture_output=True, text=True, timeout=10
-            )
-            networks = []
-            for line in result.stdout.strip().split('\n'):
-                parts = line.split(':')
-                if len(parts) >= 2 and 'wireless' in parts[1]:
-                    networks.append(parts[0])
-            return networks
-        except Exception as e:
-            print(f"Error getting saved networks: {e}")
-            return []
-    
-    def forget_network(self, ssid: str) -> Dict:
-        """Remove a saved network"""
-        try:
-            result = subprocess.run(
-                ['nmcli', 'connection', 'delete', ssid],
-                capture_output=True, text=True, timeout=10
-            )
-            return {
-                'success': result.returncode == 0,
-                'message': result.stdout.strip() or result.stderr.strip()
-            }
-        except Exception as e:
-            return {'success': False, 'message': str(e)}
-    
-    def _check_internet(self) -> bool:
-        """Check if we have internet connectivity"""
-        try:
-            result = subprocess.run(
-                ['ping', '-c', '1', '-W', '3', '8.8.8.8'],
-                capture_output=True, timeout=5
-            )
-            return result.returncode == 0
-        except:
-            return False
-    
-    # =========================================================================
-    # SYSTEM MANAGEMENT
-    # =========================================================================
-    
-    def get_system_status(self) -> Dict:
-        """Get comprehensive system status"""
-        try:
-            # CPU usage
-            cpu_result = subprocess.run(
-                ['top', '-bn1'],
-                capture_output=True, text=True, timeout=5
-            )
-            cpu_match = re.search(r'%Cpu.*?(\d+\.?\d*)\s*id', cpu_result.stdout)
-            cpu_usage = round(100 - float(cpu_match.group(1)), 1) if cpu_match else None
-            
-            # Memory usage
-            mem_result = subprocess.run(['free', '-m'], capture_output=True, text=True, timeout=5)
-            mem_lines = mem_result.stdout.strip().split('\n')
-            if len(mem_lines) >= 2:
-                mem_parts = mem_lines[1].split()
-                mem_total = int(mem_parts[1])
-                mem_used = int(mem_parts[2])
-                mem_percent = round((mem_used / mem_total) * 100, 1)
-            else:
-                mem_total, mem_used, mem_percent = None, None, None
-            
-            # Disk usage
-            disk_result = subprocess.run(
-                ['df', '-h', '/'],
-                capture_output=True, text=True, timeout=5
-            )
-            disk_lines = disk_result.stdout.strip().split('\n')
-            if len(disk_lines) >= 2:
-                disk_parts = disk_lines[1].split()
-                disk_total = disk_parts[1]
-                disk_used = disk_parts[2]
-                disk_percent = disk_parts[4]
-            else:
-                disk_total, disk_used, disk_percent = None, None, None
-            
-            # Temperature
-            try:
-                temp_result = subprocess.run(
-                    ['vcgencmd', 'measure_temp'],
-                    capture_output=True, text=True, timeout=5
-                )
-                temp_match = re.search(r'temp=(\d+\.?\d*)', temp_result.stdout)
-                temperature = float(temp_match.group(1)) if temp_match else None
-            except:
-                temperature = None
-            
-            # Uptime
-            uptime_result = subprocess.run(
-                ['uptime', '-p'],
-                capture_output=True, text=True, timeout=5
-            )
-            uptime = uptime_result.stdout.strip().replace('up ', '')
-            
-            return {
-                'cpu_usage': cpu_usage,
-                'memory': {
-                    'total_mb': mem_total,
-                    'used_mb': mem_used,
-                    'percent': mem_percent
-                },
-                'disk': {
-                    'total': disk_total,
-                    'used': disk_used,
-                    'percent': disk_percent
-                },
-                'temperature': temperature,
-                'uptime': uptime,
-                'timestamp': datetime.now().isoformat()
-            }
-        except Exception as e:
-            print(f"Error getting system status: {e}")
-            return {'error': str(e)}
-    
-    def check_for_updates(self) -> Dict:
-        """Check if updates are available from git"""
-        try:
-            # Fetch latest
-            subprocess.run(
-                ['git', 'fetch'],
-                cwd=self.install_dir,
-                capture_output=True, timeout=30
-            )
-            
-            # Check for differences
-            result = subprocess.run(
-                ['git', 'log', 'HEAD..origin/main', '--oneline'],
-                cwd=self.install_dir,
-                capture_output=True, text=True, timeout=10
-            )
-            
-            commits = [c for c in result.stdout.strip().split('\n') if c]
-            
-            # Get current version/commit
-            current = subprocess.run(
-                ['git', 'rev-parse', '--short', 'HEAD'],
-                cwd=self.install_dir,
-                capture_output=True, text=True, timeout=5
-            )
-            
-            return {
-                'updates_available': len(commits) > 0,
-                'pending_commits': len(commits),
-                'commits': commits[:5],  # Show last 5
-                'current_version': current.stdout.strip()
-            }
-        except Exception as e:
-            print(f"Error checking for updates: {e}")
-            return {'error': str(e), 'updates_available': False}
-    
-    def perform_update(self) -> Dict:
-        """Pull latest code and restart services"""
-        try:
-            results = []
-            
-            # Git pull
-            pull_result = subprocess.run(
-                ['git', 'pull', 'origin', 'main'],
-                cwd=self.install_dir,
-                capture_output=True, text=True, timeout=60
-            )
-            results.append(f"Git pull: {pull_result.stdout.strip()}")
-            
-            if pull_result.returncode != 0:
-                return {
-                    'success': False,
-                    'message': f"Git pull failed: {pull_result.stderr}",
-                    'steps': results
-                }
-            
-            # Install any new dependencies
-            pip_result = subprocess.run(
-                [f'{self.install_dir}/venv/bin/pip', 'install', '-r', 
-                 f'{self.install_dir}/backend/requirements.txt'],
-                capture_output=True, text=True, timeout=120
-            )
-            results.append("Dependencies updated")
-            
-            # Restart backend service
-            restart_result = subprocess.run(
-                ['sudo', 'systemctl', 'restart', 'tidewatch-backend.service'],
-                capture_output=True, text=True, timeout=30
-            )
-            
-            if restart_result.returncode == 0:
-                results.append("Backend service restarted")
-            else:
-                results.append(f"Service restart warning: {restart_result.stderr}")
-            
-            return {
-                'success': True,
-                'message': 'Update completed successfully',
-                'steps': results
-            }
-            
-        except Exception as e:
-            return {
-                'success': False,
-                'message': str(e),
-                'steps': results if 'results' in locals() else []
-            }
-    
-    def reboot_system(self) -> Dict:
-        """Reboot the Raspberry Pi"""
-        try:
-            subprocess.Popen(['sudo', 'reboot'])
-            return {'success': True, 'message': 'Rebooting...'}
-        except Exception as e:
-            return {'success': False, 'message': str(e)}
-    
-    def restart_kiosk(self) -> Dict:
-        """Restart just the kiosk browser"""
-        try:
-            subprocess.run(['pkill', '-f', 'chromium.*kiosk'], timeout=5)
-            subprocess.Popen(
-                [f'{self.install_dir}/kiosk-start.sh'],
-                env={**os.environ, 'DISPLAY': ':0'}
-            )
-            return {'success': True, 'message': 'Kiosk restarting...'}
-        except Exception as e:
-            return {'success': False, 'message': str(e)}
+# Initialize Flask app
+app = Flask(__name__, 
+            static_folder='../frontend',
+            template_folder='../frontend')
+CORS(app)
+app.config.from_object(Config)
+
+# Initialize services
+weather_service = WeatherService(
+    app.config['LATITUDE'],
+    app.config['LONGITUDE']
+)
+
+tide_service = TideService(
+    prediction_station=app.config['NOAA_PREDICTION_STATION'],
+    observation_station=app.config['NOAA_OBSERVATION_STATION'],
+    timezone=app.config['TIMEZONE']
+)
+
+astronomy_service = AstronomyService(
+    app.config['LATITUDE'],
+    app.config['LONGITUDE']
+)
+
+system_service = SystemService()
 
 
-if __name__ == "__main__":
-    # Test the service
-    service = SystemService()
+# =============================================================================
+# MAIN ROUTES
+# =============================================================================
+
+@app.route('/')
+def index():
+    """Serve the main frontend page"""
+    return send_from_directory('../frontend', 'index.html')
+
+
+@app.route('/api/config')
+def get_config():
+    """Return location configuration for frontend"""
+    return jsonify({
+        'location': {
+            'name': app.config['LOCATION_NAME'],
+            'latitude': app.config['LATITUDE'],
+            'longitude': app.config['LONGITUDE'],
+            'station_id': app.config['NOAA_PREDICTION_STATION'],
+            'observation_station': app.config['NOAA_OBSERVATION_STATION']
+        }
+    })
+
+
+@app.route('/api/health')
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'ok',
+        'timestamp': datetime.now().isoformat(),
+        'location': app.config['LOCATION_NAME']
+    })
+
+
+# =============================================================================
+# TIDE ROUTES
+# =============================================================================
+
+@app.route('/api/tide')
+def get_tide_data():
+    """Get all tide data - current level, predictions, status"""
+    try:
+        data = tide_service.get_all_tide_data()
+        
+        if data:
+            return jsonify({
+                'status': 'ok',
+                'data': data,
+                'location': app.config['LOCATION_NAME']
+            })
+        
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch tide data'
+        }), 500
+            
+    except Exception as e:
+        print(f"Error in /api/tide: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/tide/current')
+def get_current_tide():
+    """Get just the current water level"""
+    try:
+        current = tide_service.get_current_water_level()
+        
+        if current:
+            return jsonify({
+                'status': 'ok',
+                'data': current
+            })
+        
+        return jsonify({
+            'status': 'error',
+            'message': 'No current data available'
+        }), 404
+            
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/tide/predictions')
+def get_tide_predictions():
+    """Get tide predictions for the next 7 days"""
+    try:
+        predictions = tide_service.get_tide_predictions(days=7)
+        
+        if predictions:
+            return jsonify({
+                'status': 'ok',
+                'data': predictions
+            })
+        
+        return jsonify({
+            'status': 'error',
+            'message': 'No predictions available'
+        }), 404
+            
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+# =============================================================================
+# WEATHER & ASTRONOMY ROUTES
+# =============================================================================
+
+@app.route('/api/weather')
+def get_weather():
+    """Get current weather data"""
+    data = weather_service.get_weather()
     
-    print("\n📡 WiFi Status:")
-    print(service.get_wifi_status())
+    if data:
+        return jsonify({
+            'status': 'ok',
+            'data': data,
+            'location': app.config['LOCATION_NAME']
+        })
     
-    print("\n📶 Available Networks:")
-    for net in service.scan_wifi_networks():
-        print(f"  {net['ssid']}: {net['signal']}% ({net['security']})")
+    return jsonify({
+        'status': 'error',
+        'message': 'Failed to fetch weather data'
+    }), 500
+
+
+@app.route('/api/astronomy')
+def get_astronomy_data():
+    """Get astronomy data (sun/moon rise/set, moon phase)"""
+    data = astronomy_service.get_astronomy_data()
     
-    print("\n💻 System Status:")
-    status = service.get_system_status()
-    print(f"  CPU: {status.get('cpu_usage')}%")
-    print(f"  Memory: {status.get('memory', {}).get('percent')}%")
-    print(f"  Temp: {status.get('temperature')}°C")
-    print(f"  Uptime: {status.get('uptime')}")
+    if data:
+        return jsonify({
+            'status': 'ok',
+            'data': data,
+            'location': app.config['LOCATION_NAME']
+        })
     
-    print("\n🔄 Update Status:")
-    print(service.check_for_updates())
+    return jsonify({
+        'status': 'error',
+        'message': 'Failed to fetch astronomy data'
+    }), 500
+
+
+# =============================================================================
+# WIFI MANAGEMENT ROUTES
+# =============================================================================
+
+@app.route('/api/wifi/status')
+def wifi_status():
+    """Get current WiFi connection status"""
+    status = system_service.get_wifi_status()
+    return jsonify({
+        'status': 'ok',
+        'data': status
+    })
+
+
+@app.route('/api/wifi/scan')
+def wifi_scan():
+    """Scan for available WiFi networks"""
+    networks = system_service.scan_wifi_networks()
+    return jsonify({
+        'status': 'ok',
+        'data': networks
+    })
+
+
+@app.route('/api/wifi/connect', methods=['POST'])
+def wifi_connect():
+    """Connect to a WiFi network"""
+    data = request.get_json()
+    ssid = data.get('ssid')
+    password = data.get('password')
+    
+    if not ssid:
+        return jsonify({
+            'status': 'error',
+            'message': 'SSID is required'
+        }), 400
+    
+    result = system_service.connect_wifi(ssid, password)
+    return jsonify({
+        'status': 'ok' if result['success'] else 'error',
+        'data': result
+    })
+
+
+@app.route('/api/wifi/disconnect', methods=['POST'])
+def wifi_disconnect():
+    """Disconnect from current WiFi"""
+    result = system_service.disconnect_wifi()
+    return jsonify({
+        'status': 'ok' if result['success'] else 'error',
+        'data': result
+    })
+
+
+@app.route('/api/wifi/saved')
+def wifi_saved():
+    """Get list of saved WiFi networks"""
+    networks = system_service.get_saved_networks()
+    return jsonify({
+        'status': 'ok',
+        'data': networks
+    })
+
+
+@app.route('/api/wifi/forget', methods=['POST'])
+def wifi_forget():
+    """Forget a saved network"""
+    data = request.get_json()
+    ssid = data.get('ssid')
+    
+    if not ssid:
+        return jsonify({
+            'status': 'error',
+            'message': 'SSID is required'
+        }), 400
+    
+    result = system_service.forget_network(ssid)
+    return jsonify({
+        'status': 'ok' if result['success'] else 'error',
+        'data': result
+    })
+
+
+# =============================================================================
+# SYSTEM MANAGEMENT ROUTES
+# =============================================================================
+
+@app.route('/api/system/status')
+def system_status():
+    """Get system status (CPU, memory, temp, etc.)"""
+    status = system_service.get_system_status()
+    return jsonify({
+        'status': 'ok',
+        'data': status
+    })
+
+
+@app.route('/api/system/check-updates')
+def check_updates():
+    """Check if updates are available"""
+    result = system_service.check_for_updates()
+    return jsonify({
+        'status': 'ok',
+        'data': result
+    })
+
+
+@app.route('/api/system/update', methods=['POST'])
+def perform_update():
+    """Perform system update (git pull + restart)"""
+    result = system_service.perform_update()
+    return jsonify({
+        'status': 'ok' if result['success'] else 'error',
+        'data': result
+    })
+
+
+@app.route('/api/system/reboot', methods=['POST'])
+def reboot():
+    """Reboot the Raspberry Pi"""
+    result = system_service.reboot_system()
+    return jsonify({
+        'status': 'ok' if result['success'] else 'error',
+        'data': result
+    })
+
+
+@app.route('/api/system/restart-kiosk', methods=['POST'])
+def restart_kiosk():
+    """Restart just the kiosk browser"""
+    result = system_service.restart_kiosk()
+    return jsonify({
+        'status': 'ok' if result['success'] else 'error',
+        'data': result
+    })
+
+
+# =============================================================================
+# STATIC FILES
+# =============================================================================
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve static files (CSS, JS, images)"""
+    return send_from_directory('../frontend', path)
+
+
+if __name__ == '__main__':
+    print(f"\n🌊 TideWatch Server Starting...")
+    print(f"📍 Location: {app.config['LOCATION_NAME']}")
+    print(f"🌊 NOAA Station: {app.config['NOAA_PREDICTION_STATION']}")
+    print(f"🌐 Access at: http://localhost:5000")
+    print(f"⚙️  System management enabled")
+    print(f"💻 Press Ctrl+C to stop\n")
+    
+    app.run(debug=True, host='0.0.0.0', port=5000)

@@ -1055,7 +1055,7 @@ body {
    ============================================================================ */
 
 #dim-overlay {
-    position: absolute;
+    position: right;
     top: 0;
     left: 0;
     width: 200%;
@@ -1192,6 +1192,699 @@ body {
     margin-top: 12px; /* Increased from 8px */
     line-height: 1.6;
     transition: color var(--transition-normal);
+}
+
+/* ============================================================================
+   SETTINGS BUTTON
+   ============================================================================ */
+
+.settings-button {
+    position: absolute;
+    bottom: 46px;
+    left: 160px;
+    background: var(--color-card);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all var(--transition-normal);
+    color: var(--color-text);
+}
+
+.settings-button:hover {
+    background: var(--color-accent);
+    transform: scale(1.05);
+}
+
+.settings-button:active {
+    transform: scale(0.95);
+}
+
+/* ============================================================================
+   SETTINGS MODAL
+   ============================================================================ */
+
+.settings-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    animation: fadeIn 0.2s ease;
+}
+
+.settings-modal-overlay.active {
+    display: flex;
+}
+
+.settings-modal {
+    background: var(--color-card);
+    border: 3px solid var(--color-accent);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+}
+
+.settings-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.settings-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    margin: 0;
+}
+
+.settings-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    color: var(--color-text);
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all var(--transition-normal);
+}
+
+.settings-modal-close:hover {
+    background: var(--color-bg);
+    color: var(--color-accent);
+}
+
+/* Settings Tabs */
+.settings-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--color-border);
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+
+.settings-tab {
+    background: transparent;
+    border: none;
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-dim);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-tab:hover {
+    color: var(--color-text);
+    background: var(--color-bg);
+}
+
+.settings-tab.active {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+}
+
+.settings-tab i {
+    font-size: 1.1rem;
+}
+
+/* Settings Content */
+.settings-modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+}
+
+.settings-panel {
+    display: none;
+}
+
+.settings-panel.active {
+    display: block;
+}
+
+/* ============================================================================
+   WIFI PANEL
+   ============================================================================ */
+
+.wifi-status-card,
+.wifi-networks-card {
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.wifi-status-header,
+.wifi-networks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.wifi-status-header h3,
+.wifi-networks-header h3 {
+    font-size: 1.1rem;
+    color: var(--color-accent);
+    margin: 0;
+}
+
+.wifi-current-info {
+    min-height: 60px;
+}
+
+.wifi-connected {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.wifi-connected-icon {
+    font-size: 2.5rem;
+    color: var(--color-turquoise);
+}
+
+.wifi-connected-details {
+    flex: 1;
+}
+
+.wifi-ssid {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.wifi-ip {
+    font-size: 0.9rem;
+    color: var(--color-text-dim);
+}
+
+.wifi-signal-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 24px;
+}
+
+.wifi-signal-bar span {
+    width: 6px;
+    background: var(--color-border);
+    border-radius: 2px;
+    transition: all var(--transition-fast);
+}
+
+.wifi-signal-bar span.active {
+    background: var(--color-turquoise);
+}
+
+.wifi-disconnected {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-high-tide);
+}
+
+.wifi-disconnected i {
+    font-size: 2rem;
+}
+
+.wifi-status-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
+    color: var(--color-text-dim);
+}
+
+/* WiFi Network List */
+.wifi-networks-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.wifi-network-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+}
+
+.wifi-network-item:hover {
+    background: var(--color-card);
+    border-color: var(--color-border);
+}
+
+.wifi-network-item.connected {
+    background: var(--color-card);
+    border-color: var(--color-turquoise);
+}
+
+.wifi-network-icon {
+    font-size: 1.3rem;
+    width: 40px;
+    color: var(--color-text-dim);
+}
+
+.wifi-network-item.connected .wifi-network-icon {
+    color: var(--color-turquoise);
+}
+
+.wifi-network-info {
+    flex: 1;
+}
+
+.wifi-network-name {
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 2px;
+}
+
+.wifi-network-security {
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+}
+
+.wifi-network-signal {
+    font-size: 0.9rem;
+    color: var(--color-text-dim);
+    margin-left: 12px;
+}
+
+/* WiFi Password Dialog */
+.wifi-password-dialog {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+}
+
+.wifi-password-dialog.active {
+    display: flex;
+}
+
+.wifi-password-content {
+    background: var(--color-card);
+    border: 2px solid var(--color-accent);
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 400px;
+}
+
+.wifi-password-content h4 {
+    margin: 0 0 16px 0;
+    color: var(--color-accent);
+    font-size: 1.2rem;
+}
+
+.wifi-password-input-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.wifi-password-input-group input {
+    flex: 1;
+    padding: 14px 16px;
+    font-size: 1.1rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    color: var(--color-text);
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.wifi-password-input-group input:focus {
+    border-color: var(--color-accent);
+}
+
+.wifi-password-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* ============================================================================
+   SYSTEM PANEL
+   ============================================================================ */
+
+.system-status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.system-stat-card {
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.system-stat-card.wide {
+    grid-column: span 2;
+}
+
+.stat-icon {
+    font-size: 1.8rem;
+    color: var(--color-accent);
+    width: 50px;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--color-text-dim);
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+/* System Actions */
+.system-actions h3 {
+    font-size: 1.1rem;
+    color: var(--color-accent);
+    margin-bottom: 16px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-action {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    background: var(--color-bg);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius);
+    color: var(--color-text);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.btn-action i {
+    font-size: 1.8rem;
+    color: var(--color-accent);
+}
+
+.btn-action:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+}
+
+.btn-action.warning:hover {
+    border-color: var(--color-high-tide);
+}
+
+.btn-action.warning i {
+    color: var(--color-high-tide);
+}
+
+/* ============================================================================
+   UPDATES PANEL
+   ============================================================================ */
+
+.update-status-card {
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+}
+
+.update-status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.update-status-header h3 {
+    font-size: 1.2rem;
+    color: var(--color-accent);
+    margin: 0;
+}
+
+.update-info {
+    margin-bottom: 20px;
+}
+
+.update-current {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 1rem;
+}
+
+.update-current .label {
+    color: var(--color-text-dim);
+}
+
+.update-current .value {
+    font-family: monospace;
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.update-available {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    color: var(--color-turquoise);
+}
+
+.update-available.has-updates {
+    color: var(--color-accent);
+}
+
+.update-available i {
+    font-size: 1.2rem;
+}
+
+/* Pending Commits */
+.pending-commits {
+    background: var(--color-card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.pending-commits h4 {
+    font-size: 1rem;
+    color: var(--color-accent);
+    margin: 0 0 12px 0;
+}
+
+.pending-commits ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pending-commits li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.9rem;
+    color: var(--color-text);
+    font-family: monospace;
+}
+
+.pending-commits li:last-child {
+    border-bottom: none;
+}
+
+/* Update Actions */
+.update-actions {
+    text-align: center;
+}
+
+/* Progress Bar */
+.update-progress {
+    margin-top: 20px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--color-card);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-turquoise));
+    width: 0%;
+    transition: width 0.3s ease;
+    animation: progressPulse 1.5s infinite;
+}
+
+@keyframes progressPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.progress-text {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--color-text-dim);
+}
+
+/* ============================================================================
+   BUTTONS (Reusable)
+   ============================================================================ */
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    color: var(--color-text-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius);
+    transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+    color: var(--color-accent);
+    background: var(--color-bg);
+}
+
+.btn-small {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all var(--transition-fast);
+}
+
+.btn-small:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.btn-primary {
+    background: var(--color-accent);
+    border: none;
+    color: var(--color-bg);
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary.btn-large {
+    padding: 16px 32px;
+    font-size: 1.1rem;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 2px solid var(--color-border);
+    color: var(--color-text);
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover {
+    border-color: var(--color-text);
+}
+
+/* Touch-friendly sizing */
+@media (hover: none) and (pointer: coarse) {
+    .settings-button {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .settings-tab {
+        padding: 16px 20px;
+    }
+    
+    .wifi-network-item {
+        padding: 16px;
+    }
+    
+    .btn-action {
+        padding: 24px;
+    }
 }
 
 @keyframes fadeIn {

@@ -1120,6 +1120,7 @@ body {
     transition: color var(--transition-normal);
 }
 
+/* Demo Button - Updated with cycling icons */
 .demo-button {
     position: absolute;
     bottom: 46px;
@@ -1149,9 +1150,25 @@ body {
     transform: scale(1.05);
 }
 
+/* Active states for different demo types */
 .demo-button.active {
-    background: #D95E5E;
-    border-color: #FF6B6B;
+    animation: none;
+    transform: scale(1);
+}
+
+/* Weather demo - blue */
+.demo-button.active .fa-cloud-sun {
+    color: #33C7FF;
+}
+
+/* Moon demo - silver */
+.demo-button.active .fa-moon {
+    color: #E0E0E0;
+}
+
+/* All demo - rainbow pulse */
+.demo-button.active .fa-film {
+    color: #FF6B6B;
 }
 
 @keyframes pulse {

@@ -1351,12 +1351,14 @@ function populateInfoModal() {
 }
 
 // ============================================================================
-// DEMO MODE WITH UI BUTTON - Add to app.js
+// ENHANCED DEMO MODE - Weather + Moon Phases - Add to app.js
 // ============================================================================
 
 let demoMode = false;
 let demoInterval = null;
 let currentDemoIndex = 0;
+let currentMoonIndex = 0;
+let demoType = 'weather'; // 'weather', 'moon', or 'all'
 
 const DEMO_WEATHER_STATES = [
     { conditions: 'Sunny', temp: 75, wind_speed: '5 mph', wind_direction: 'N', wind_direction_degrees: 0, visibility: '10.0 mi' },
@@ -1371,23 +1373,112 @@ const DEMO_WEATHER_STATES = [
     { conditions: 'Windy', temp: 50, wind_speed: '35 mph', wind_direction: 'NE', wind_direction_degrees: 45, visibility: '8.0 mi' }
 ];
 
+const DEMO_MOON_PHASES = [
+    { 
+        phase: 'New Moon', 
+        illumination: 0,
+        moonrise: '6:30 AM',
+        moonset: '6:15 PM',
+        sunrise: '7:15 AM',
+        sunset: '5:30 PM'
+    },
+    { 
+        phase: 'Waxing Crescent', 
+        illumination: 25,
+        moonrise: '9:00 AM',
+        moonset: '9:45 PM',
+        sunrise: '7:10 AM',
+        sunset: '5:35 PM'
+    },
+    { 
+        phase: 'First Quarter', 
+        illumination: 50,
+        moonrise: '12:15 PM',
+        moonset: '12:30 AM',
+        sunrise: '7:05 AM',
+        sunset: '5:40 PM'
+    },
+    { 
+        phase: 'Waxing Gibbous', 
+        illumination: 75,
+        moonrise: '3:30 PM',
+        moonset: '3:15 AM',
+        sunrise: '7:00 AM',
+        sunset: '5:45 PM'
+    },
+    { 
+        phase: 'Full Moon', 
+        illumination: 100,
+        moonrise: '6:00 PM',
+        moonset: '6:30 AM',
+        sunrise: '6:55 AM',
+        sunset: '5:50 PM'
+    },
+    { 
+        phase: 'Waning Gibbous', 
+        illumination: 75,
+        moonrise: '9:15 PM',
+        moonset: '9:00 AM',
+        sunrise: '6:50 AM',
+        sunset: '5:55 PM'
+    },
+    { 
+        phase: 'Last Quarter', 
+        illumination: 50,
+        moonrise: '11:45 PM',
+        moonset: '11:30 AM',
+        sunrise: '6:45 AM',
+        sunset: '6:00 PM'
+    },
+    { 
+        phase: 'Waning Crescent', 
+        illumination: 25,
+        moonrise: '3:00 AM',
+        moonset: '2:45 PM',
+        sunrise: '6:40 AM',
+        sunset: '6:05 PM'
+    }
+];
+
 function toggleDemoMode() {
     if (demoMode) {
         stopDemoMode();
     } else {
-        startDemoMode();
+        // Cycle through demo types: weather -> moon -> all -> off
+        if (demoType === 'weather') {
+            demoType = 'moon';
+            startDemoMode();
+        } else if (demoType === 'moon') {
+            demoType = 'all';
+            startDemoMode();
+        } else {
+            stopDemoMode();
+        }
     }
 }
 
 function startDemoMode() {
-    if (demoMode) return;
+    if (demoMode) {
+        stopDemoMode(); // Stop current demo first
+    }
     
     demoMode = true;
-    console.log('🎬 DEMO MODE ACTIVATED');
+    console.log(`🎬 DEMO MODE: ${demoType.toUpperCase()}`);
     
     const demoBtn = document.getElementById('demo-button');
     if (demoBtn) {
         demoBtn.classList.add('active');
+        // Update button icon based on demo type
+        const icon = demoBtn.querySelector('i');
+        if (icon) {
+            if (demoType === 'weather') {
+                icon.className = 'fas fa-cloud-sun';
+            } else if (demoType === 'moon') {
+                icon.className = 'fas fa-moon';
+            } else {
+                icon.className = 'fas fa-film';
+            }
+        }
     }
     
     // Show demo indicator in status bar
@@ -1397,31 +1488,60 @@ function startDemoMode() {
         if (!demoIndicator) {
             demoIndicator = document.createElement('span');
             demoIndicator.id = 'demo-indicator';
-            demoIndicator.innerHTML = '<i class="fas fa-film"></i> DEMO';
-            demoIndicator.style.color = '#FFD700';
-            demoIndicator.style.fontWeight = 'bold';
             statusBar.insertBefore(demoIndicator, statusBar.firstChild);
         }
+        
+        let demoText = '';
+        if (demoType === 'weather') {
+            demoText = '<i class="fas fa-cloud-sun"></i> DEMO: Weather';
+        } else if (demoType === 'moon') {
+            demoText = '<i class="fas fa-moon"></i> DEMO: Moon';
+        } else {
+            demoText = '<i class="fas fa-film"></i> DEMO: All';
+        }
+        
+        demoIndicator.innerHTML = demoText;
+        demoIndicator.style.color = '#FFD700';
+        demoIndicator.style.fontWeight = 'bold';
     }
     
-    // Cycle through weather states every 3 seconds
+    // Cycle through states every 3 seconds
     demoInterval = setInterval(() => {
-        cycleDemoWeather();
+        if (demoType === 'weather') {
+            cycleDemoWeather();
+        } else if (demoType === 'moon') {
+            cycleDemoMoon();
+        } else {
+            // Cycle both
+            cycleDemoWeather();
+            cycleDemoMoon();
+        }
     }, 3000);
     
     // Show first state immediately
-    cycleDemoWeather();
+    if (demoType === 'weather' || demoType === 'all') {
+        cycleDemoWeather();
+    }
+    if (demoType === 'moon' || demoType === 'all') {
+        cycleDemoMoon();
+    }
 }
 
 function stopDemoMode() {
     if (!demoMode) return;
     
     demoMode = false;
+    demoType = 'weather'; // Reset to weather for next cycle
     console.log('🛑 Demo mode stopped');
     
     const demoBtn = document.getElementById('demo-button');
     if (demoBtn) {
         demoBtn.classList.remove('active');
+        // Reset icon
+        const icon = demoBtn.querySelector('i');
+        if (icon) {
+            icon.className = 'fas fa-film';
+        }
     }
     
     // Remove demo indicator
@@ -1436,13 +1556,15 @@ function stopDemoMode() {
     
     // Reload real data
     loadWeatherData();
+    loadAstronomyData();
     currentDemoIndex = 0;
+    currentMoonIndex = 0;
 }
 
 function cycleDemoWeather() {
     const weatherState = DEMO_WEATHER_STATES[currentDemoIndex];
     
-    console.log(`📊 Demo: ${weatherState.conditions}`);
+    console.log(`☁️ Weather Demo: ${weatherState.conditions}`);
     
     // Update weather display
     const demoData = {
@@ -1464,12 +1586,36 @@ function cycleDemoWeather() {
     currentDemoIndex = (currentDemoIndex + 1) % DEMO_WEATHER_STATES.length;
 }
 
+function cycleDemoMoon() {
+    const moonState = DEMO_MOON_PHASES[currentMoonIndex];
+    
+    console.log(`🌙 Moon Demo: ${moonState.phase} (${moonState.illumination}%)`);
+    
+    // Update astronomy display
+    const demoData = {
+        status: 'ok',
+        data: {
+            moon_phase: moonState.phase,
+            moon_illumination: moonState.illumination,
+            moonrise: moonState.moonrise,
+            moonset: moonState.moonset,
+            sunrise: moonState.sunrise,
+            sunset: moonState.sunset
+        }
+    };
+    
+    displayAstronomy(demoData);
+    
+    // Move to next phase
+    currentMoonIndex = (currentMoonIndex + 1) % DEMO_MOON_PHASES.length;
+}
+
 // Add event listener for demo button
-// (This should run after DOM is loaded, put it in setupEventListeners function)
 function setupDemoButton() {
     const demoButton = document.getElementById('demo-button');
     if (demoButton) {
         demoButton.addEventListener('click', toggleDemoMode);
+        console.log('🎬 Demo button ready - tap to cycle: Weather → Moon → All → Off');
     }
 }
 

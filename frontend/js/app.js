@@ -41,25 +41,25 @@ const CHART = {
 };
 
 const WEATHER_EMOJI = {
-    sunny: '☀️',
-    clear: '☀️',
-    'partly cloudy': '⛅',
-    'mostly sunny': '⛅',
-    'mostly cloudy': '☁️',
-    cloudy: '☁️',
-    overcast: '☁️',
-    rain: '🌧️',
-    shower: '🌧️',
-    drizzle: '🌧️',
-    storm: '⛈️',
-    thunder: '⛈️',
-    snow: '❄️',
-    flurries: '❄️',
-    fog: '🌫️',
-    mist: '🌫️',
-    haze: '🌫️',
-    wind: '💨',
-    default: '☁️'
+    sunny: 'fa-sun',
+    clear: 'fa-sun',
+    'partly cloudy': 'fa-cloud-sun',
+    'mostly sunny': 'fa-cloud-sun',
+    'mostly cloudy': 'fa-cloud',
+    cloudy: 'fa-cloud',
+    overcast: 'fa-cloud',
+    rain: 'fa-cloud-rain',
+    shower: 'fa-cloud-showers-heavy',
+    drizzle: 'fa-cloud-rain',
+    storm: 'fa-cloud-bolt',
+    thunder: 'fa-cloud-bolt',
+    snow: 'fa-snowflake',
+    flurries: 'fa-snowflake',
+    fog: 'fa-smog',
+    mist: 'fa-smog',
+    haze: 'fa-smog',
+    wind: 'fa-wind',
+    default: 'fa-cloud'
 };
 
 const DIMMING = {
@@ -201,7 +201,10 @@ function toggleTheme() {
 function updateThemeIcon() {
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
-        themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+        const icon = themeToggle.querySelector('i');
+        if (icon) {
+            icon.className = state.theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
     }
 }
 
@@ -255,7 +258,7 @@ function getScreenInfo() {
     
     console.log(`📺 Screen: ${screenWidthPx}x${screenHeightPx}px`);
     console.log(`📏 Physical: ${physicalWidth}x${physicalHeight}mm`);
-    console.log(`🔍 PPI: ${ppiX.toFixed(0)} x ${ppiY.toFixed(0)}`);
+    console.log(`📐 PPI: ${ppiX.toFixed(0)} x ${ppiY.toFixed(0)}`);
     
     return { ppiX, ppiY, screenWidthPx, screenHeightPx };
 }
@@ -345,10 +348,10 @@ function updateNetworkStatus(isOnline) {
     const networkStatus = document.getElementById('network-status');
     if (networkStatus) {
         if (isOnline) {
-            networkStatus.textContent = '📡 Network OK';
+            networkStatus.innerHTML = '<i class="fas fa-wifi"></i> Network OK';
             networkStatus.style.color = '';
         } else {
-            networkStatus.textContent = '📡 No Internet';
+            networkStatus.innerHTML = '<i class="fas fa-wifi" style="text-decoration: line-through;"></i> No Internet';
             networkStatus.style.color = '#D95E5E';
         }
     }
@@ -446,7 +449,14 @@ function updateElement(id, content) {
 
 function updateConnectionStatus(isConnected) {
     state.isConnected = isConnected;
-    updateElement('connection-status', isConnected ? '🟢 Connected' : '🔴 Disconnected');
+    const statusEl = document.getElementById('connection-status');
+    if (statusEl) {
+        const icon = statusEl.querySelector('i');
+        if (icon) {
+            icon.style.color = isConnected ? '#00D1B2' : '#D95E5E';
+        }
+        statusEl.innerHTML = `<i class="fas fa-circle status-indicator" style="color: ${isConnected ? '#00D1B2' : '#D95E5E'}"></i> ${isConnected ? 'Connected' : 'Disconnected'}`;
+    }
     
     if (!isConnected) {
         updateElement('last-update', 'Connection Lost');
@@ -1147,8 +1157,8 @@ function displayWeather(weatherData) {
     
     const weatherIconElement = document.getElementById('weather-icon');
     if (weatherIconElement && weather.conditions) {
-        const emoji = getWeatherEmoji(weather.conditions);
-        weatherIconElement.textContent = emoji;
+        const iconClass = getWeatherEmoji(weather.conditions);
+        weatherIconElement.innerHTML = `<i class="fas ${iconClass}"></i>`;
     }
     
     const windText = weather.wind_speed && weather.wind_direction
@@ -1181,9 +1191,9 @@ function getWeatherEmoji(conditions) {
     
     const condition = conditions.toLowerCase();
     
-    for (const [key, emoji] of Object.entries(WEATHER_EMOJI)) {
+    for (const [key, iconClass] of Object.entries(WEATHER_EMOJI)) {
         if (key !== 'default' && condition.includes(key)) {
-            return emoji;
+            return iconClass;
         }
     }
     
@@ -1336,6 +1346,213 @@ function populateInfoModal() {
         updateElement('info-last-update', `${dateStr} at ${timeStr}`);
     }
 }
+
+// ============================================================================
+// DEMO MODE - Add this to the end of app.js (before the window.TideWatch export)
+// ============================================================================
+
+let demoMode = false;
+let demoInterval = null;
+
+const DEMO_WEATHER_STATES = [
+    { conditions: 'Sunny', temp: 75, wind_speed: '5 mph', wind_direction: 'N', wind_direction_degrees: 0, visibility: '10.0 mi' },
+    { conditions: 'Partly Cloudy', temp: 68, wind_speed: '12 mph', wind_direction: 'NE', wind_direction_degrees: 45, visibility: '9.5 mi' },
+    { conditions: 'Mostly Cloudy', temp: 62, wind_speed: '8 mph', wind_direction: 'E', wind_direction_degrees: 90, visibility: '8.0 mi' },
+    { conditions: 'Cloudy', temp: 58, wind_speed: '15 mph', wind_direction: 'SE', wind_direction_degrees: 135, visibility: '7.0 mi' },
+    { conditions: 'Rain', temp: 55, wind_speed: '18 mph', wind_direction: 'S', wind_direction_degrees: 180, visibility: '5.0 mi' },
+    { conditions: 'Heavy Rain Showers', temp: 52, wind_speed: '25 mph', wind_direction: 'SW', wind_direction_degrees: 225, visibility: '3.0 mi' },
+    { conditions: 'Thunderstorm', temp: 60, wind_speed: '30 mph', wind_direction: 'W', wind_direction_degrees: 270, visibility: '4.0 mi' },
+    { conditions: 'Snow Flurries', temp: 32, wind_speed: '20 mph', wind_direction: 'NW', wind_direction_degrees: 315, visibility: '2.0 mi' },
+    { conditions: 'Fog', temp: 45, wind_speed: '3 mph', wind_direction: 'N', wind_direction_degrees: 0, visibility: '0.5 mi' },
+    { conditions: 'Windy', temp: 50, wind_speed: '35 mph', wind_direction: 'NE', wind_direction_degrees: 45, visibility: '8.0 mi' }
+];
+
+let currentDemoIndex = 0;
+
+function startDemoMode() {
+    if (demoMode) {
+        console.log('Demo mode already running');
+        return;
+    }
+    
+    demoMode = true;
+    console.log('🎬 DEMO MODE ACTIVATED - Cycling through all weather states');
+    console.log('Press Ctrl+D or type stopDemoMode() to exit');
+    
+    // Show demo indicator
+    const statusBar = document.querySelector('.status-bar');
+    if (statusBar) {
+        const demoIndicator = document.createElement('span');
+        demoIndicator.id = 'demo-indicator';
+        demoIndicator.innerHTML = '<i class="fas fa-film"></i> DEMO MODE';
+        demoIndicator.style.color = '#FFD700';
+        demoIndicator.style.fontWeight = 'bold';
+        statusBar.insertBefore(demoIndicator, statusBar.firstChild);
+    }
+    
+    // Cycle through weather states every 3 seconds
+    demoInterval = setInterval(() => {
+        cycleDemoWeather();
+    }, 3000);
+    
+    // Show first state immediately
+    cycleDemoWeather();
+}
+
+function stopDemoMode() {
+    if (!demoMode) {
+        console.log('Demo mode not running');
+        return;
+    }
+    
+    demoMode = false;
+    console.log('🛑 Demo mode stopped - reloading real data...');
+    
+    // Remove demo indicator
+    const indicator = document.getElementById('demo-indicator');
+    if (indicator) indicator.remove();
+    
+    // Clear interval
+    if (demoInterval) {
+        clearInterval(demoInterval);
+        demoInterval = null;
+    }
+    
+    // Reload real data
+    loadWeatherData();
+    currentDemoIndex = 0;
+}
+
+function cycleDemoWeather() {
+    const weatherState = DEMO_WEATHER_STATES[currentDemoIndex];
+    
+    console.log(`📊 Demo State ${currentDemoIndex + 1}/${DEMO_WEATHER_STATES.length}: ${weatherState.conditions}`);
+    
+    // Update weather display
+    const demoData = {
+        status: 'ok',
+        data: {
+            temperature: weatherState.temp,
+            temperature_unit: 'F',
+            conditions: weatherState.conditions,
+            wind_speed: weatherState.wind_speed,
+            wind_direction: weatherState.wind_direction,
+            wind_direction_degrees: weatherState.wind_direction_degrees,
+            visibility: weatherState.visibility
+        }
+    };
+    
+    displayWeather(demoData);
+    
+    // Move to next state
+    currentDemoIndex = (currentDemoIndex + 1) % DEMO_WEATHER_STATES.length;
+}
+
+function testAllIcons() {
+    console.log('🎨 TESTING ALL ICONS:');
+    console.log('');
+    console.log('WEATHER ICONS:');
+    Object.keys(WEATHER_EMOJI).forEach(condition => {
+        console.log(`  ${condition}: ${WEATHER_EMOJI[condition]}`);
+    });
+    console.log('');
+    console.log('UI ICONS:');
+    console.log('  Theme Toggle: fa-moon / fa-sun');
+    console.log('  Info Button: fa-info');
+    console.log('  Refresh: fa-sync');
+    console.log('  Connection: fa-circle');
+    console.log('  Network: fa-wifi');
+    console.log('  Wind Arrow: fa-arrow-up (rotates based on direction)');
+    console.log('');
+    console.log('💡 Start demo mode to see all weather icons cycle:');
+    console.log('   Type: startDemoMode()');
+}
+
+// Test individual weather conditions
+function testWeatherIcon(condition) {
+    const validConditions = Object.keys(WEATHER_EMOJI);
+    
+    if (!validConditions.includes(condition.toLowerCase())) {
+        console.log(`❌ Invalid condition. Valid options: ${validConditions.join(', ')}`);
+        return;
+    }
+    
+    const demoData = {
+        status: 'ok',
+        data: {
+            temperature: 72,
+            temperature_unit: 'F',
+            conditions: condition,
+            wind_speed: '10 mph',
+            wind_direction: 'N',
+            wind_direction_degrees: 0,
+            visibility: '10.0 mi'
+        }
+    };
+    
+    displayWeather(demoData);
+    console.log(`✅ Displaying: ${condition} icon`);
+}
+
+// Test connection status
+function testConnectionStatus(connected) {
+    updateConnectionStatus(connected);
+    console.log(`✅ Connection status: ${connected ? 'Connected' : 'Disconnected'}`);
+}
+
+// Test network status
+function testNetworkStatus(online) {
+    updateNetworkStatus(online);
+    console.log(`✅ Network status: ${online ? 'Online' : 'Offline'}`);
+}
+
+// Test theme toggle
+function testThemeToggle() {
+    toggleTheme();
+    console.log(`✅ Theme switched to: ${state.theme}`);
+}
+
+// Keyboard shortcut for demo mode (Ctrl+D)
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        if (demoMode) {
+            stopDemoMode();
+        } else {
+            startDemoMode();
+        }
+    }
+});
+
+// Export demo functions
+window.TideWatch.demo = {
+    start: startDemoMode,
+    stop: stopDemoMode,
+    testAllIcons,
+    testWeatherIcon,
+    testConnectionStatus,
+    testNetworkStatus,
+    testThemeToggle,
+    
+    // Quick access to demo functions
+    help: () => {
+        console.log('🎬 TIDEWATCH DEMO MODE COMMANDS:');
+        console.log('');
+        console.log('TideWatch.demo.start()              - Start auto-cycling demo');
+        console.log('TideWatch.demo.stop()               - Stop demo mode');
+        console.log('TideWatch.demo.testAllIcons()       - List all available icons');
+        console.log('TideWatch.demo.testWeatherIcon("sunny") - Test specific weather icon');
+        console.log('TideWatch.demo.testConnectionStatus(false) - Test disconnected state');
+        console.log('TideWatch.demo.testNetworkStatus(false) - Test offline state');
+        console.log('TideWatch.demo.testThemeToggle()    - Toggle light/dark theme');
+        console.log('');
+        console.log('KEYBOARD SHORTCUTS:');
+        console.log('Ctrl+D - Toggle demo mode on/off');
+        console.log('');
+        console.log('AVAILABLE WEATHER CONDITIONS:');
+        console.log(Object.keys(WEATHER_EMOJI).join(', '));
+    }
+};
 
 // ============================================================================
 // EXPORT

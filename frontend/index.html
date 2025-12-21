@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TideWatch - Maple Grove Beach</title>
+    <!-- Font Awesome for modern icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -11,7 +13,7 @@
     <div class="info-modal-overlay" id="info-modal-overlay">
         <div class="info-modal">
             <div class="info-modal-header">
-                <h2 class="info-modal-title">🌊 TideWatch</h2>
+                <h2 class="info-modal-title"><i class="fas fa-water"></i> TideWatch</h2>
                 <button class="info-modal-close" id="info-modal-close" aria-label="Close">×</button>
             </div>
             <div class="info-modal-content">
@@ -74,7 +76,7 @@
                         Touch the screen to wake from dim mode. Data updates automatically in the background.
                     </p>
                     <p class="info-description" style="margin-top: 10px; text-align: center; font-size: 0.85rem;">
-                        Version 1.0 • Made with 🌊
+                        Version 1.0 • Made with <i class="fas fa-water" style="font-size: 0.8rem;"></i>
                     </p>
                 </div>
             </div>
@@ -88,9 +90,15 @@
         <div id="dim-overlay"></div>
 
         <!-- Control Buttons - Inside container so they scale -->
-        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">🌙</button>
-        <button class="info-button" id="info-button" aria-label="Show information">ℹ️</button>
-        <button class="refresh-button" id="refresh-button" aria-label="Refresh all data">🔄</button>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">
+            <i class="fas fa-moon"></i>
+        </button>
+        <button class="info-button" id="info-button" aria-label="Show information">
+            <i class="fas fa-info"></i>
+        </button>
+        <button class="refresh-button" id="refresh-button" aria-label="Refresh all data">
+            <i class="fas fa-regular fa-sync"></i>
+        </button>
 
         <!-- Left Side Panel -->
         <aside class="side-panel">
@@ -179,7 +187,7 @@
                         <div class="info-card">
                             <h3>Wind Speed and Direction</h3>
                             <div class="wind-display">
-                                <div class="wind-arrow" id="wind-arrow">↑</div>
+                                <div class="wind-arrow" id="wind-arrow"><i class="fas fa-arrow-up"></i></div>
                                 <div class="wind-speed" id="wind-speed">54 mph</div>
                             </div>
                         </div>
@@ -188,7 +196,7 @@
                         <div class="info-card">
                             <h3>Weather</h3>
                             <div class="weather-display">
-                                <div class="weather-icon" id="weather-icon">☁️</div>
+                                <div class="weather-icon" id="weather-icon"><i class="fas fa-cloud"></i></div>
                                 <div class="weather-temp" id="weather-temp">28°F</div>
                             </div>
                         </div>
@@ -237,7 +245,7 @@
 
                         <!-- Sun -->
                         <div class="astro-card">
-                            <div class="sun-icon">☀️</div>
+                            <div class="sun-icon"><i class="fas fa-sun"></i></div>
                             <div class="astro-times">
                                 <div class="astro-time">
                                     <span class="label">Sunrise:</span>
@@ -283,8 +291,8 @@
 
         <!-- Status Bar - Inside container so it scales -->
         <footer class="status-bar">
-            <span id="connection-status">🟢 Connected</span>
-            <span id="network-status">📡 Network OK</span>
+            <span id="connection-status"><i class="fas fa-circle status-indicator"></i> Connected</span>
+            <span id="network-status"><i class="fas fa-wifi"></i> Network OK</span>
             <span id="current-time">Loading...</span>
             <span id="last-update">Updated: Never</span>
         </footer>

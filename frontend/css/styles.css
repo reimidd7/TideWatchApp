@@ -940,7 +940,7 @@ body {
    ============================================================================ */
 
 .data-status-table-container {
-    max-height: 350px; /* Increased from 300px */
+    max-height: 375px; /* Increased from 300px */
     overflow-y: auto;
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
@@ -949,7 +949,7 @@ body {
 .data-status-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 1rem; /* Increased from 0.85rem */
+    font-size: 1.4rem; /* Increased from 0.85rem */
 }
 
 .data-status-table thead {
@@ -960,12 +960,12 @@ body {
 }
 
 .data-status-table th {
-    padding: 12px 10px; /* Increased from 10px 8px */
+    padding: 10px 8px; /* Increased from 10px 8px */
     text-align: left;
     font-weight: 600;
     color: var(--color-accent);
     border-bottom: 2px solid var(--color-border);
-    font-size: 0.95rem; /* Increased from 0.75rem */
+    font-size: 1.4rem; /* Increased from 0.75rem */
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -985,19 +985,19 @@ body {
 
 .data-name {
     font-weight: 600;
-    font-size: 1rem; /* Added */
+    font-size: 1.2rem; /* Added */
     color: var(--color-text-dim);
 }
 
 .data-value {
     color: var(--color-text);
-    font-size: 1rem; /* Added */
+    font-size: 1.2rem; /* Added */
     font-family: monospace;
 }
 
 .data-timestamp {
     color: var(--color-text-dim);
-    font-size: 0.95rem; /* Increased from 0.8rem */
+    font-size: 1.2rem; /* Increased from 0.8rem */
     white-space: nowrap;
 }
 
@@ -1108,7 +1108,7 @@ body {
 }
 
 .info-modal-title {
-    font-size: 2rem; /* Increased from 1.5rem */
+    font-size: 2.2rem; /* Increased from 1.5rem */
     font-weight: 700;
     color: var(--color-accent);
     margin: 0;
@@ -1118,7 +1118,7 @@ body {
 .info-modal-close {
     background: transparent;
     border: none;
-    font-size: 2.5rem; /* Increased from 2rem */
+    font-size: 2.7rem; /* Increased from 2rem */
     color: var(--color-text);
     cursor: pointer;
     width: 50px; /* Increased from 40px */
@@ -1138,7 +1138,7 @@ body {
 .info-modal-content {
     color: var(--color-text);
     line-height: 1.6;
-    font-size: 1.1rem; /* Added base font size */
+    font-size: 1.5rem; /* Added base font size */
 }
 
 .info-section {
@@ -1146,7 +1146,7 @@ body {
 }
 
 .info-section-title {
-    font-size: 1.3rem; /* Increased from 1rem */
+    font-size: 1.5rem; /* Increased from 1rem */
     font-weight: 600;
     color: var(--color-accent);
     margin-bottom: 14px; /* Increased from 10px */
@@ -1169,21 +1169,21 @@ body {
 
 .info-label {
     font-weight: 600;
-    font-size: 1.05rem; /* Added */
+    font-size: 1.2rem; /* Added */
     color: var(--color-text-dim);
     transition: color var(--transition-normal);
 }
 
 .info-value {
     color: var(--color-text);
-    font-size: 1.05rem; /* Added */
+    font-size: 1.2rem; /* Added */
     text-align: right;
     transition: color var(--transition-normal);
 }
 
 .info-description {
     color: var(--color-text-dim);
-    font-size: 1rem; /* Increased from 0.85rem */
+    font-size: 1.15rem; /* Increased from 0.85rem */
     margin-top: 12px; /* Increased from 8px */
     line-height: 1.6;
     transition: color var(--transition-normal);

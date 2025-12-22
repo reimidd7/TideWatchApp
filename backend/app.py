@@ -1,8 +1,8 @@
 """
 TideWatch Flask Application
-Main server for tide, weather, astronomy, and system management
+Main server for tide, weather, and astronomy data visualization
 """
-from flask import Flask, render_template, jsonify, send_from_directory, request
+from flask import Flask, render_template, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 
@@ -10,7 +10,6 @@ from config import Config
 from weather_service import WeatherService
 from tide_service import TideService
 from astronomy_service import AstronomyService
-from system_service import SystemService
 
 # Initialize Flask app
 app = Flask(__name__, 
@@ -36,12 +35,6 @@ astronomy_service = AstronomyService(
     app.config['LONGITUDE']
 )
 
-system_service = SystemService()
-
-
-# =============================================================================
-# MAIN ROUTES
-# =============================================================================
 
 @app.route('/')
 def index():
@@ -72,10 +65,6 @@ def health_check():
         'location': app.config['LOCATION_NAME']
     })
 
-
-# =============================================================================
-# TIDE ROUTES
-# =============================================================================
 
 @app.route('/api/tide')
 def get_tide_data():
@@ -151,10 +140,6 @@ def get_tide_predictions():
         }), 500
 
 
-# =============================================================================
-# WEATHER & ASTRONOMY ROUTES
-# =============================================================================
-
 @app.route('/api/weather')
 def get_weather():
     """Get current weather data"""
@@ -191,147 +176,6 @@ def get_astronomy_data():
     }), 500
 
 
-# =============================================================================
-# WIFI MANAGEMENT ROUTES
-# =============================================================================
-
-@app.route('/api/wifi/status')
-def wifi_status():
-    """Get current WiFi connection status"""
-    status = system_service.get_wifi_status()
-    return jsonify({
-        'status': 'ok',
-        'data': status
-    })
-
-
-@app.route('/api/wifi/scan')
-def wifi_scan():
-    """Scan for available WiFi networks"""
-    networks = system_service.scan_wifi_networks()
-    return jsonify({
-        'status': 'ok',
-        'data': networks
-    })
-
-
-@app.route('/api/wifi/connect', methods=['POST'])
-def wifi_connect():
-    """Connect to a WiFi network"""
-    data = request.get_json()
-    ssid = data.get('ssid')
-    password = data.get('password')
-    
-    if not ssid:
-        return jsonify({
-            'status': 'error',
-            'message': 'SSID is required'
-        }), 400
-    
-    result = system_service.connect_wifi(ssid, password)
-    return jsonify({
-        'status': 'ok' if result['success'] else 'error',
-        'data': result
-    })
-
-
-@app.route('/api/wifi/disconnect', methods=['POST'])
-def wifi_disconnect():
-    """Disconnect from current WiFi"""
-    result = system_service.disconnect_wifi()
-    return jsonify({
-        'status': 'ok' if result['success'] else 'error',
-        'data': result
-    })
-
-
-@app.route('/api/wifi/saved')
-def wifi_saved():
-    """Get list of saved WiFi networks"""
-    networks = system_service.get_saved_networks()
-    return jsonify({
-        'status': 'ok',
-        'data': networks
-    })
-
-
-@app.route('/api/wifi/forget', methods=['POST'])
-def wifi_forget():
-    """Forget a saved network"""
-    data = request.get_json()
-    ssid = data.get('ssid')
-    
-    if not ssid:
-        return jsonify({
-            'status': 'error',
-            'message': 'SSID is required'
-        }), 400
-    
-    result = system_service.forget_network(ssid)
-    return jsonify({
-        'status': 'ok' if result['success'] else 'error',
-        'data': result
-    })
-
-
-# =============================================================================
-# SYSTEM MANAGEMENT ROUTES
-# =============================================================================
-
-@app.route('/api/system/status')
-def system_status():
-    """Get system status (CPU, memory, temp, etc.)"""
-    status = system_service.get_system_status()
-    return jsonify({
-        'status': 'ok',
-        'data': status
-    })
-
-
-@app.route('/api/system/check-updates')
-def check_updates():
-    """Check if updates are available"""
-    result = system_service.check_for_updates()
-    return jsonify({
-        'status': 'ok',
-        'data': result
-    })
-
-
-@app.route('/api/system/update', methods=['POST'])
-def perform_update():
-    """Perform system update (git pull + restart)"""
-    result = system_service.perform_update()
-    return jsonify({
-        'status': 'ok' if result['success'] else 'error',
-        'data': result
-    })
-
-
-@app.route('/api/system/reboot', methods=['POST'])
-def reboot():
-    """Reboot the Raspberry Pi"""
-    result = system_service.reboot_system()
-    return jsonify({
-        'status': 'ok' if result['success'] else 'error',
-        'data': result
-    })
-
-
-@app.route('/api/system/restart-kiosk', methods=['POST'])
-def restart_kiosk():
-    """Restart just the kiosk browser"""
-    result = system_service.restart_kiosk()
-    return jsonify({
-        'status': 'ok' if result['success'] else 'error',
-        'data': result
-    })
-
-
-# =============================================================================
-# STATIC FILES
-# =============================================================================
-
 @app.route('/<path:path>')
 def serve_static(path):
     """Serve static files (CSS, JS, images)"""
@@ -341,9 +185,8 @@ def serve_static(path):
 if __name__ == '__main__':
     print(f"\n🌊 TideWatch Server Starting...")
     print(f"📍 Location: {app.config['LOCATION_NAME']}")
-    print(f"🌊 NOAA Station: {app.config['NOAA_PREDICTION_STATION']}")
+    print(f"🌊 NOAA Station: {app.config['NOAA_PREDICTION_STATION']} (Seattle - closest with API support)")
     print(f"🌐 Access at: http://localhost:5000")
-    print(f"⚙️  System management enabled")
     print(f"💻 Press Ctrl+C to stop\n")
     
     app.run(debug=True, host='0.0.0.0', port=5000)

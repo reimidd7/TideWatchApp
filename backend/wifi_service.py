@@ -33,12 +33,12 @@ class WiFiService:
     
     def _wpa_cli(self, command: str, timeout: int = 10) -> tuple:
         """Run a wpa_cli command"""
-        cmd = ["wpa_cli", "-i", self.interface, command]
+        cmd = ["sudo", "wpa_cli", "-i", self.interface, command]
         return self._run_cmd(cmd, timeout)
     
     def _wpa_cli_args(self, *args, timeout: int = 10) -> tuple:
         """Run wpa_cli with multiple arguments"""
-        cmd = ["wpa_cli", "-i", self.interface] + list(args)
+        cmd = ["sudo", "wpa_cli", "-i", self.interface] + list(args)
         return self._run_cmd(cmd, timeout)
     
     def get_status(self) -> Dict:

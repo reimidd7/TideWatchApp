@@ -889,12 +889,12 @@ body {
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     cursor: pointer;
     z-index: 1000;
     transition: all var(--transition-normal);
@@ -916,16 +916,16 @@ body {
 .info-button {
     position: absolute;
     bottom: 46px;
-    left: 50px;
+    left: 44px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     cursor: pointer;
     z-index: 1000;
     transition: all var(--transition-normal);
@@ -939,6 +939,82 @@ body {
 .info-button:active {
     transform: scale(0.95);
 }
+
+/* ============================================================================
+   MANUAL REFRESH BUTTON - NOW ABSOLUTE WITHIN CONTAINER
+   ============================================================================ */
+
+.refresh-button {
+    position: absolute;
+    bottom: 46px;
+    left: 88px;
+    background: var(--color-card);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all var(--transition-normal);
+}
+
+.refresh-button:hover {
+    background: var(--color-turquoise);
+    transform: scale(1.05);
+}
+
+.refresh-button:active {
+    transform: scale(0.95);
+}
+
+.refresh-button.spinning {
+    animation: spin 1s linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================================================
+   SETTINGS BUTTON
+   ============================================================================ */
+
+.settings-button {
+    position: absolute;
+    bottom: 46px;
+    left: 132px;
+    background: var(--color-card);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all var(--transition-normal);
+}
+
+.settings-button:hover {
+    background: var(--color-accent);
+    transform: scale(1.05);
+}
+
+.settings-button:active {
+    transform: scale(0.95);
+}
+
 
 /* ============================================================================
    DATA STATUS TABLE
@@ -1006,49 +1082,7 @@ body {
     white-space: nowrap;
 }
 
-/* ============================================================================
-   MANUAL REFRESH BUTTON - NOW ABSOLUTE WITHIN CONTAINER
-   ============================================================================ */
 
-.refresh-button {
-    position: absolute;
-    bottom: 46px;
-    left: 100px;
-    background: var(--color-card);
-    border: 2px solid var(--color-border);
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    cursor: pointer;
-    z-index: 1000;
-    transition: all var(--transition-normal);
-}
-
-.refresh-button:hover {
-    background: var(--color-turquoise);
-    transform: scale(1.05);
-}
-
-.refresh-button:active {
-    transform: scale(0.95);
-}
-
-.refresh-button.spinning {
-    animation: spin 1s linear;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
 
 /* ============================================================================
    DIM OVERLAY - ABSOLUTE WITHIN CONTAINER
@@ -1194,36 +1228,6 @@ body {
     transition: color var(--transition-normal);
 }
 
-/* ============================================================================
-   SETTINGS BUTTON
-   ============================================================================ */
-
-.settings-button {
-    position: absolute;
-    bottom: 46px;
-    left: 150px;
-    background: var(--color-card);
-    border: 2px solid var(--color-border);
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    cursor: pointer;
-    z-index: 1000;
-    transition: all var(--transition-normal);
-}
-
-.settings-button:hover {
-    background: var(--color-accent);
-    transform: scale(1.05);
-}
-
-.settings-button:active {
-    transform: scale(0.95);
-}
 
 /* ============================================================================
    SETTINGS MODAL

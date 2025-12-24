@@ -33,12 +33,12 @@ class WiFiService:
     
     def _wpa_cli(self, command: str, timeout: int = 10) -> tuple:
         """Run a wpa_cli command"""
-        cmd = ["sudo", "wpa_cli", "-i", self.interface, command]
+        cmd = ["/usr/bin/sudo", "/usr/sbin/wpa_cli", "-i", self.interface, command]
         return self._run_cmd(cmd, timeout)
     
     def _wpa_cli_args(self, *args, timeout: int = 10) -> tuple:
         """Run wpa_cli with multiple arguments"""
-        cmd = ["sudo", "wpa_cli", "-i", self.interface] + list(args)
+        cmd = ["/usr/bin/sudo", "/usr/sbin/wpa_cli", "-i", self.interface] + list(args)
         return self._run_cmd(cmd, timeout)
     
     def get_status(self) -> Dict:
@@ -81,7 +81,7 @@ class WiFiService:
         """Get the IP address of the WiFi interface"""
         try:
             success, output = self._run_cmd([
-                "ip", "-4", "addr", "show", self.interface
+                "/usr/sbin/ip", "-4", "addr", "show", self.interface
             ])
             if success:
                 match = re.search(r'inet (\d+\.\d+\.\d+\.\d+)', output)
@@ -95,10 +95,9 @@ class WiFiService:
         """Get signal strength in dBm"""
         try:
             success, output = self._run_cmd([
-                "iwconfig", self.interface
+                "/usr/sbin/iwconfig", self.interface
             ])
             if success:
-                # Look for "Signal level=-XX dBm"
                 match = re.search(r'Signal level[=:](-?\d+)', output)
                 if match:
                     return int(match.group(1))

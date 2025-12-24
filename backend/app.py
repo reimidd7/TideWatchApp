@@ -7,6 +7,7 @@ from flask_cors import CORS
 from datetime import datetime
 import subprocess
 import platform
+import os
 
 from config import Config
 from weather_service import WeatherService
@@ -411,6 +412,29 @@ def shutdown_system():
             'status': 'error',
             'message': str(e)
         }), 500
+    
+@app.route('/api/keyboard/show', methods=['POST'])
+def show_keyboard():
+    """Show on-screen keyboard"""
+    try:
+        subprocess.Popen(
+            ['/usr/bin/onboard'],
+            env={**os.environ, 'DISPLAY': ':0'},
+            start_new_session=True
+        )
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/keyboard/hide', methods=['POST'])
+def hide_keyboard():
+    """Hide on-screen keyboard"""
+    try:
+        subprocess.run(['/usr/bin/pkill', 'onboard'], timeout=5)
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/<path:path>')

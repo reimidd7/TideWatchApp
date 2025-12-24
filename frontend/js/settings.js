@@ -362,6 +362,9 @@ function openPasswordDialog(ssid) {
         passwordInput.type = 'password';
         dialog.classList.add('active');
         passwordInput.focus();
+        
+        // Show on-screen keyboard
+        fetch('/api/keyboard/show', { method: 'POST' });
     }
 }
 
@@ -371,6 +374,9 @@ function closePasswordDialog() {
         dialog.classList.remove('active');
     }
     settingsState.selectedNetwork = null;
+    
+    // Hide on-screen keyboard
+    fetch('/api/keyboard/hide', { method: 'POST' });
 }
 
 async function submitWiFiConnection() {
@@ -385,6 +391,9 @@ async function submitWiFiConnection() {
         alert('Please enter a password');
         return;
     }
+    
+    // Hide keyboard before connecting
+    fetch('/api/keyboard/hide', { method: 'POST' });
     
     closePasswordDialog();
     await connectToNetwork(ssid, password);

@@ -885,12 +885,12 @@ body {
 .theme-toggle {
     position: absolute;
     bottom: 46px;
-    left: 10px;
+    left: 1px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 44px;
-    height: 44px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -916,12 +916,12 @@ body {
 .info-button {
     position: absolute;
     bottom: 46px;
-    left: 60px;
+    left: 50px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 44px;
-    height: 44px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1013,12 +1013,12 @@ body {
 .refresh-button {
     position: absolute;
     bottom: 46px;
-    left: 110px;
+    left: 100px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 44px;
-    height: 44px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1201,12 +1201,12 @@ body {
 .settings-button {
     position: absolute;
     bottom: 46px;
-    left: 160px;
+    left: 150px;
     background: var(--color-card);
     border: 2px solid var(--color-border);
     border-radius: 50%;
-    width: 44px;
-    height: 44px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1214,7 +1214,6 @@ body {
     cursor: pointer;
     z-index: 1000;
     transition: all var(--transition-normal);
-    color: var(--color-text);
 }
 
 .settings-button:hover {

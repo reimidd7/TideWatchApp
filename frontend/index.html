@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>TideWatch - Maple Grove Beach</title>
-    <!-- Font Awesome for modern icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Info Modal - Stays outside container (fullscreen overlay) -->
+    <!-- Info Modal -->
     <div class="info-modal-overlay" id="info-modal-overlay">
         <div class="info-modal">
             <div class="info-modal-header">
@@ -28,7 +27,6 @@
                         <span class="info-value" id="info-coordinates">Loading...</span>
                     </div>
                 </div>
-
                 <div class="info-section">
                     <h3 class="info-section-title">Data Sources</h3>
                     <div class="info-item">
@@ -43,12 +41,7 @@
                         <span class="info-label">Astronomy:</span>
                         <span class="info-value">US Naval Observatory</span>
                     </div>
-                    <p class="info-description">
-                        Tide predictions from NOAA CO-OPS. Weather data from National Weather Service. 
-                        Sun/moon times from USNO Astronomical Applications.
-                    </p>
                 </div>
-
                 <div class="info-section">
                     <h3 class="info-section-title">Updates</h3>
                     <div class="info-item">
@@ -60,125 +53,198 @@
                         <span class="info-value">Every 10 minutes</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Astronomy:</span>
-                        <span class="info-value">Every 12 hours</span>
-                    </div>
-                    <div class="info-item">
                         <span class="info-label">Last Update:</span>
                         <span class="info-value" id="info-last-update">Loading...</span>
                     </div>
                 </div>
-
                 <div class="info-section">
                     <h3 class="info-section-title">Data Status</h3>
                     <div class="data-status-table-container">
                         <table class="data-status-table">
-                            <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Value</th>
-                                    <th>Last Updated</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Data</th><th>Value</th><th>Last Updated</th></tr></thead>
                             <tbody id="data-status-tbody">
-                                <tr>
-                                    <td colspan="3" style="text-align: center; color: var(--color-text-dim);">Loading...</td>
-                                </tr>
+                                <tr><td colspan="3" style="text-align: center;">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                <div class="info-section">
-                    <h3 class="info-section-title">About</h3>
-                    <p class="info-description">
-                        TideWatch is a real-time tide, weather, and astronomy display designed for coastal communities. 
-                        Touch the screen to wake from dim mode. Data updates automatically in the background.
-                    </p>
-                    <p class="info-description" style="margin-top: 10px; text-align: center; font-size: 0.85rem;">
-                        Version 1.0 • Made with <i class="fas fa-water" style="font-size: 0.8rem;"></i>
-                    </p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Container - ALL UI ELEMENTS INSIDE FOR PROPER SCALING -->
+    <!-- Settings Modal -->
+    <div class="settings-modal-overlay" id="settings-modal-overlay">
+        <div class="settings-modal">
+            <div class="settings-modal-header">
+                <h2 class="settings-modal-title"><i class="fas fa-cog"></i> Settings</h2>
+                <button class="settings-modal-close" id="settings-modal-close" aria-label="Close">×</button>
+            </div>
+            <div class="settings-tabs">
+                <button class="settings-tab active" data-tab="wifi">
+                    <i class="fas fa-wifi"></i> WiFi
+                </button>
+                <button class="settings-tab" data-tab="system">
+                    <i class="fas fa-microchip"></i> System
+                </button>
+            </div>
+            <div class="settings-modal-content">
+                <!-- WiFi Panel -->
+                <div class="settings-panel active" id="wifi-panel">
+                    <div class="wifi-status-card">
+                        <div class="wifi-status-header">
+                            <h3>Current Connection</h3>
+                            <button class="btn-icon" id="wifi-refresh-status" title="Refresh">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <div class="wifi-current-info" id="wifi-current-info">
+                            <div class="wifi-status-loading">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Checking connection...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wifi-networks-card">
+                        <div class="wifi-networks-header">
+                            <h3>Available Networks</h3>
+                            <button class="btn-small" id="wifi-scan-btn">
+                                <i class="fas fa-search"></i> Scan
+                            </button>
+                        </div>
+                        <div class="wifi-networks-list" id="wifi-networks-list">
+                            <div class="wifi-status-loading">
+                                <span>Click "Scan" to find networks</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- System Panel -->
+                <div class="settings-panel" id="system-panel">
+                    <div class="system-status-grid">
+                        <div class="system-stat-card">
+                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                            <div>
+                                <div class="stat-label">Uptime</div>
+                                <div class="stat-value" id="system-uptime">--</div>
+                            </div>
+                        </div>
+                        <div class="system-stat-card">
+                            <div class="stat-icon"><i class="fas fa-thermometer-half"></i></div>
+                            <div>
+                                <div class="stat-label">CPU Temp</div>
+                                <div class="stat-value" id="system-temp">--</div>
+                            </div>
+                        </div>
+                        <div class="system-stat-card wide">
+                            <div class="stat-icon"><i class="fas fa-memory"></i></div>
+                            <div>
+                                <div class="stat-label">Memory Usage</div>
+                                <div class="stat-value" id="system-memory">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="system-actions">
+                        <h3>System Actions</h3>
+                        <div class="action-buttons">
+                            <button class="btn-action" id="btn-reboot">
+                                <i class="fas fa-redo"></i>
+                                <span>Reboot</span>
+                            </button>
+                            <button class="btn-action warning" id="btn-shutdown">
+                                <i class="fas fa-power-off"></i>
+                                <span>Shutdown</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WiFi Password Dialog -->
+    <div class="wifi-password-dialog" id="wifi-password-dialog">
+        <div class="wifi-password-content">
+            <h4>Connect to <span id="wifi-connect-ssid">Network</span></h4>
+            <div class="wifi-password-input-group">
+                <input type="password" id="wifi-password-input" placeholder="Enter password">
+                <button class="btn-icon" id="wifi-toggle-password" title="Show password">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <div class="wifi-password-actions">
+                <button class="btn-secondary" id="wifi-connect-cancel">Cancel</button>
+                <button class="btn-primary" id="wifi-connect-submit">Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
     <div id="app" class="container">
-        
-        <!-- Dim Overlay - Inside container so it scales -->
         <div id="dim-overlay"></div>
 
-        <!-- Control Buttons - Inside container so they scale -->
-        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">
+        <!-- Control Buttons -->
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
             <i class="fas fa-moon"></i>
         </button>
-        <button class="info-button" id="info-button" aria-label="Show information">
+        <button class="info-button" id="info-button" aria-label="Show info">
             <i class="fas fa-info"></i>
         </button>
-        <button class="refresh-button" id="refresh-button" aria-label="Refresh all data">
-            <i class="fas fa-regular fa-sync"></i>
+        <button class="refresh-button" id="refresh-button" aria-label="Refresh">
+            <i class="fas fa-sync"></i>
+        </button>
+        <button class="settings-button" id="settings-button" aria-label="Settings">
+            <i class="fas fa-cog"></i>
         </button>
 
         <!-- Left Side Panel -->
         <aside class="side-panel">
             <h2 class="location-title" id="location-name">Maple Grove Beach</h2>
-            
             <div class="current-height">
                 <div class="label">Current Height</div>
                 <div class="value" id="current-height">7.8 ft</div>
             </div>
-            
             <div class="tide-times">
                 <div class="tide-time">
-                    <div class="label">Next Low </div>
+                    <div class="label">Next Low</div>
                     <div class="value" id="next-low">7:34 PM</div>
                 </div>
                 <div class="tide-time">
-                    <div class="label">Next High </div>
+                    <div class="label">Next High</div>
                     <div class="value" id="next-high">9:08 AM</div>
                 </div>
             </div>
         </aside>
 
-        <!-- Main Content Area -->
+        <!-- Main Content -->
         <main class="main-content">
-            
-            <!-- Top Section - Tide Dial + Weather/Astro -->
             <div class="top-section">
-                <!-- Tide Dial - Left Side -->
+                <!-- Tide Dial -->
                 <div class="tide-dial-section">
                     <div class="info-card tide-dial-card">
                         <div class="tide-dial-container">
-                            
-                            <!-- TOP: HIGH label and time -->
                             <div class="tide-label-high">
                                 <div class="tide-extreme-label">HIGH</div>
                                 <div class="tide-extreme-time" id="high-time-display">--:--</div>
                             </div>
-                            
                             <svg class="tide-dial" viewBox="0 0 240 240">
                                 <defs>
                                     <linearGradient id="tideGradientFalling" x1="0%" y1="0%" x2="0%" y2="100%">
-                                        <stop offset="0%" stop-color="#D95E5E" />
-                                        <stop offset="100%" stop-color="#33C7FF" />
+                                        <stop offset="0%" stop-color="#D95E5E"/>
+                                        <stop offset="100%" stop-color="#33C7FF"/>
                                     </linearGradient>
                                     <linearGradient id="tideGradientRising" x1="0%" y1="100%" x2="0%" y2="0%">
-                                        <stop offset="0%" stop-color="#33C7FF" />
-                                        <stop offset="100%" stop-color="#D95E5E" />
+                                        <stop offset="0%" stop-color="#33C7FF"/>
+                                        <stop offset="100%" stop-color="#D95E5E"/>
                                     </linearGradient>
                                 </defs>
-                                
                                 <circle cx="120" cy="120" r="80" fill="none" class="tide-ring-bg" stroke-width="14"/>
-                                <line x1="120" y1="33" x2="120" y2="47" stroke="#D95E5E" stroke-width="3" stroke-linecap="butt"/>
-                                <line x1="120" y1="193" x2="120" y2="207" stroke="#33C7FF" stroke-width="3" stroke-linecap="butt"/>
-                                <path id="tide-arc" d="" fill="none" stroke-width="14" stroke-linecap="butt"/>
+                                <line x1="120" y1="33" x2="120" y2="47" stroke="#D95E5E" stroke-width="3"/>
+                                <line x1="120" y1="193" x2="120" y2="207" stroke="#33C7FF" stroke-width="3"/>
+                                <path id="tide-arc" d="" fill="none" stroke-width="14"/>
                                 <circle cx="120" cy="120" r="72" class="tide-inner-circle" stroke-width="1"/>
                                 <text x="18" y="123" text-anchor="middle" font-size="8" class="tide-side-label">rising</text>
                                 <text x="224" y="123" text-anchor="middle" font-size="8" class="tide-side-label falling">falling</text>
                             </svg>
-                            
-                            <!-- Center Display - Next Tide Only -->
                             <div class="tide-center-display">
                                 <div class="tide-center-label">Next Tide</div>
                                 <div class="next-tide-info">
@@ -187,92 +253,73 @@
                                     <div class="next-tide-countdown" id="next-tide-countdown">in --h --m</div>
                                 </div>
                             </div>
-                            
-                            <!-- BOTTOM: LOW label and time -->
                             <div class="tide-label-low">
                                 <div class="tide-extreme-time" id="low-time-display">--:--</div>
                                 <div class="tide-extreme-label">LOW</div>
                             </div>
-                            
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Side - Weather and Astronomy -->
+                <!-- Weather & Astronomy -->
                 <div class="right-panels">
-                    <!-- Top Grid - Weather Info Cards -->
                     <div class="info-grid">
-                
-                        <!-- Wind Card -->
                         <div class="info-card">
-                            <h3>Wind Speed and Direction</h3>
+                            <h3>Wind</h3>
                             <div class="wind-display">
                                 <div class="wind-arrow" id="wind-arrow"><i class="fas fa-arrow-up"></i></div>
-                                <div class="wind-speed" id="wind-speed">54 mph</div>
+                                <div class="wind-speed" id="wind-speed">-- mph</div>
                             </div>
                         </div>
-
-                        <!-- Weather Card -->
                         <div class="info-card">
                             <h3>Weather</h3>
                             <div class="weather-display">
                                 <div class="weather-icon" id="weather-icon"><i class="fas fa-cloud"></i></div>
-                                <div class="weather-temp" id="weather-temp">28°F</div>
+                                <div class="weather-temp" id="weather-temp">--°F</div>
                             </div>
                         </div>
-
-                        <!-- Visibility Card -->
                         <div class="info-card">
                             <h3>Visibility</h3>
                             <div class="visibility-display">
-                                <svg class="visibility-droplet" viewBox="0 0 100 120" id="visibility-droplet">
+                                <svg class="visibility-droplet" viewBox="0 0 100 120">
                                     <defs>
                                         <clipPath id="dropletClip">
-                                            <path d="M 50,110 L 20,30 Q 20,10 35,10 L 65,10 Q 80,10 80,30 Z" />
+                                            <path d="M 50,110 L 20,30 Q 20,10 35,10 L 65,10 Q 80,10 80,30 Z"/>
                                         </clipPath>
                                     </defs>
-                                    <path class="droplet-outline" 
-                                        d="M 50,110 L 20,30 Q 20,10 35,10 L 65,10 Q 80,10 80,30 Z" 
-                                        fill="none" 
-                                        stroke="currentColor" 
-                                        stroke-width="3"/>
+                                    <path class="droplet-outline" d="M 50,110 L 20,30 Q 20,10 35,10 L 65,10 Q 80,10 80,30 Z" fill="none" stroke="currentColor" stroke-width="3"/>
                                     <g clip-path="url(#dropletClip)">
                                         <rect x="0" y="0" width="100" height="120" fill="var(--color-border)" opacity="0.2"/>
                                         <rect id="visibility-fill" x="0" y="120" width="100" height="0" fill="var(--color-turquoise)"/>
                                     </g>
                                 </svg>
-                                <div class="visibility-value" id="visibility">10 mi</div>
+                                <div class="visibility-value" id="visibility">-- mi</div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Astronomy Section -->
                     <div class="astronomy-section">
-                        <!-- Moon -->
                         <div class="astro-card">
-                            <img src="assets/New Moon.svg" alt="Moon Phase" class="moon-phase-icon" id="moon-phase">
+                            <img src="assets/New Moon.svg" alt="Moon" class="moon-phase-icon" id="moon-phase">
                             <div class="astro-times">
                                 <div class="astro-time">
-                                    <span class="label">Moon Rise:</span>
+                                    <span class="label">Rise:</span>
                                     <span class="value" id="moon-rise">--:--</span>
                                 </div>
                                 <div class="astro-time">
-                                    <span class="label">Moon Set:</span>
+                                    <span class="label">Set:</span>
                                     <span class="value" id="moon-set">--:--</span>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Sun -->
                         <div class="astro-card">
                             <div class="sun-icon"><i class="fas fa-sun"></i></div>
                             <div class="astro-times">
                                 <div class="astro-time">
-                                    <span class="label">Sunrise:</span>
+                                    <span class="label">Rise:</span>
                                     <span class="value" id="sunrise">--:--</span>
                                 </div>
                                 <div class="astro-time">
-                                    <span class="label">Sunset:</span>
+                                    <span class="label">Set:</span>
                                     <span class="value" id="sunset">--:--</span>
                                 </div>
                             </div>
@@ -281,45 +328,37 @@
                 </div>
             </div>
 
-            <!-- Swipeable Tide Chart Section -->
+            <!-- Tide Chart Section -->
             <div class="tide-chart-section">
                 <div class="swipe-container" id="swipe-container">
-                    
-                    <!-- View 1: Today's Chart -->
                     <div class="swipe-panel active" id="chart-view">
                         <h3>Today's Tide Chart</h3>
                         <div class="chart-container">
                             <canvas id="tide-chart"></canvas>
                         </div>
                     </div>
-
-                    <!-- View 2: 7-Day Table -->
                     <div class="swipe-panel" id="table-view">
                         <h3>7-Day Tide Table</h3>
                         <div class="tide-table" id="tide-table"></div>
                     </div>
                 </div>
-                
-                <!-- Swipe Indicators -->
                 <div class="swipe-indicators">
                     <span class="indicator active" data-index="0"></span>
                     <span class="indicator" data-index="1"></span>
                 </div>
             </div>
-
         </main>
 
-        <!-- Status Bar - Inside container so it scales -->
+        <!-- Status Bar -->
         <footer class="status-bar">
-            <span id="connection-status"><i class="fas fa-circle status-indicator"></i> Connected</span>
+            <span id="connection-status"><i class="fas fa-circle"></i> Connected</span>
             <span id="network-status"><i class="fas fa-wifi"></i> Network OK</span>
             <span id="current-time">Loading...</span>
             <span id="last-update">Updated: Never</span>
         </footer>
-
     </div>
 
-    <!-- JavaScript -->
     <script src="js/app.js"></script>
+    <script src="js/settings.js"></script>
 </body>
 </html>
